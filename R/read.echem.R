@@ -2,7 +2,6 @@
 #'
 #' This function is used to import echem data.
 #' @param echem_file Path to data file
-#' @param cycler_type Name of the cycler
 #' @return An echem.data.object containing the echem data
 #' @export
 #' @examples
@@ -15,7 +14,7 @@ read.echem <-function(path,...) {
   as.echem.data.object(load.jms(path,.read.echem,...))
 }
 
-.read.echem <-function(echem_file,cycler_type=NA)
+.read.echem <-function(echem_file,cycler_type=NA,...)
 {
   if(is.null(echem_file)|is.na(echem_file)|echem_file=='')
     return(NA)

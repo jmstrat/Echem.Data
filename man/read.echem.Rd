@@ -8,8 +8,6 @@ read.echem(path, ...)
 }
 \arguments{
 \item{echem_file}{Path to data file}
-
-\item{cycler_type}{Name of the cycler}
 }
 \value{
 An echem.data.object containing the echem data
