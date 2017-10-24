@@ -9,3 +9,6 @@ NULL
 
 #' @export
 echem.data.object <- function(...) echem.data.object.super(...)
+
+#' @export
+is.echem.data.object <- function(...) is.echem.data.object.super(...)
