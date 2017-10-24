@@ -4,7 +4,7 @@
 \alias{read.echem}
 \title{Read Echem Data}
 \usage{
-read.echem(echem_file, cycler_type = NA)
+read.echem(path, ...)
 }
 \arguments{
 \item{echem_file}{Path to data file}
