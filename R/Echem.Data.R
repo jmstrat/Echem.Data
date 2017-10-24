@@ -7,3 +7,5 @@ NULL
   Plotting.Utils::create_data_type('echem',expression('Time / s'),'Voltage / V',envir=asNamespace('Echem.Data'))
 }
 
+#' @export
+echem.data.object <- function(...) echem.data.object.super(...)
