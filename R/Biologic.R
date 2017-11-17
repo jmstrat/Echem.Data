@@ -61,7 +61,7 @@ load.biologic <-function(file)
       } else if('ox_red' %in% names(data)) {
         #ox_red is not simply the sign of the current unfortunately...
         #It seems to be the sign of the control
-        #(i.e. notmally the current, but the sign of the held potential during a voltage hold)
+        #(i.e. normally the current, but could be the sign of the held potential e.g. during a voltage hold)
         #(Possibly...)
 
         #That being said, if all else fails it should be a reasonable guess...
