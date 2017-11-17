@@ -3,4 +3,3 @@
 export(echem.data.object)
 export(is.echem.data.object)
 export(read.echem)
-import(Plotting.Utils)

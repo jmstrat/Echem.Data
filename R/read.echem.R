@@ -12,6 +12,7 @@
 #' read.echem("/path/to/file.idf")
 read.echem <-function(path,...) {
   as.echem.data.object(load.jms(path,.read.echem,...))
+  as.echem.data.object(jms.classes::load.jms(path,.read.echem,...))
 }
 
 .read.echem <-function(echem_file,cycler_type=NA,...)
