@@ -1,6 +1,13 @@
-.cycler_types <- function() {
-  c("arbin","biologic","land","ivium",'maccor','internal')
+#' List of supported cyclers and their file extensions
+#'
+#' @export
+#' @rdname cycler_types
+cycler_types <- function() {
+  list(arbin=c('xlsx','xls'),biologic=c('mpr','mpt'),land=c('txt'),ivium=c('idf','txt'),maccor=c('txt'),internal=c('csv'))
 }
+#' @export
+#' @rdname cycler_types
+supported_file_extensions <- function() unique(unlist(cycler_types()))
 
 #' Guess cycler for file
 #'
@@ -37,7 +44,7 @@ guess_cycler <- function(file) {
   if(is.na(cycler_type)||length(cycler_type)==0) return(NA)
   cycler_type=tolower(cycler_type)
   cycler_type=gsub("[[:space:]]", "", cycler_type)
-  cycler_types=.cycler_types()
+  cycler_types=names(cycler_types())
   if(!cycler_type %in% cycler_types) {
     return(NA)
   }

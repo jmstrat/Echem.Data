@@ -11,7 +11,6 @@
 #' read.echem("/path/to/file.txt")
 #' read.echem("/path/to/file.idf")
 read.echem <-function(path,...) {
-  as.echem.data.object(load.jms(path,.read.echem,...))
   as.echem.data.object(jms.classes::load.jms(path,.read.echem,...))
 }
 
@@ -27,7 +26,7 @@ read.echem <-function(path,...) {
   if(is.na(cycler_type)) {
     cycler_type=guess_cycler(echem_file)
   }
-  cycler_types=.cycler_types()
+  cycler_types=names(cycler_types())
   cycler_type=.cycler_normalise(cycler_type)
 
   loader_functions=c(load.arbin,load.biologic,load.land, load.ivium, load.maccor, load.internal)
