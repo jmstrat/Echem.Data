@@ -18,7 +18,7 @@ load.ivium <-function(file) {
 }
 
 load.ivium.data.file<-function(file) {
-  flog.info('Reading ivium .idf data from "%s"',file)
+  jms.classes::log.info('Reading ivium .idf data from "%s"',file)
   lines=readLines(file, skipNul = TRUE)
   pd=grep('primary_data',perl=T,lines)
 
@@ -46,7 +46,7 @@ load.ivium.data.file<-function(file) {
 
 load.ivium.txt<-function(file)
 {
-  flog.info('Reading ivium .txt data from "%s"',file)
+  jms.classes::log.info('Reading ivium .txt data from "%s"',file)
   data=read.table(file,sep="\t",header=TRUE)
   if(ncol(data)!=3) {
     stop('Expected 3 column data format: Time (s), Current (A), Voltage (V)',call.=FALSE)

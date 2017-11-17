@@ -8,8 +8,6 @@
 #' @keywords internal
 load.arbin <-function(file)
 {
-  load_or_install('utils')
-  load_or_install('readxl')
   #Get sheet names
   sn=.xlsheets(file)
   if(is.null(sn)) {
@@ -31,8 +29,8 @@ load.arbin <-function(file)
       for(i in 1:length(snums)) {
         s=snums[[i]]
         #Read
-        ws=tryCatch(.xldata(file,s), error = function (e) {
-          flog.debug("Got error %s, trying workaround.",e)
+        ws=tryCatch(readxl::.xldata(file,s), error = function (e) {
+          jms.classes::log.debug("Got error %s, trying workaround.",e)
           ###WARNING: THE FOLLOWING IS A WORKAROUND FOR A BUG IN readxl --> THIS MAY BREAK###
 
           chart_sheet=grep("^Channel_Chart",sn)
@@ -61,7 +59,7 @@ load.arbin <-function(file)
       }
       return(dat)
     }, error=function(e) {
-      flog.debug("ERROR: %s",e)
+      jms.classes::log.debug("ERROR: %s",e)
       warning(sprintf('Error loading [%s]. Failed to read Arbin data.',file))
       NULL
     })
@@ -77,7 +75,7 @@ load.arbin <-function(file)
 .get_arbin_attributes <- function(file) {
   atts=list()
   try({
-    info=Echem:::.xldata(file,'Info')
+    info=.xldata(file,'Info')
     index <- which(info=='Start_DateTime', arr.ind=TRUE)
     atts$date=as.Date("1899-12-30")+as.numeric(info[index[1,'row']+1,index[1,'col']]) #This will give the wrong answer for dates between 1/1/1900 and 1/3/1900 :)
 
