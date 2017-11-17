@@ -5,6 +5,8 @@ Version: 1.0.0
 Author: Josh Stratford
 Maintainer: Josh Stratford <51674722+jmstrat@users.noreply.github.com>
 Description: 
+Imports: jms.classes,
+         readxl
 License: 
 Encoding: UTF-8
 LazyData: true
