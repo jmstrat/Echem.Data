@@ -77,7 +77,7 @@ load.biologic <-function(file)
       warning('Unable to determine current for biologic data, assuming current control and using control data as the current',call.=FALSE)
       data$Current.A.=data$control_v_ma
     } else {
-      stop("Unable to determine current for biologic data",call.=F)
+      warning("Unable to determine current for biologic data",call.=F)
     }
   }
 
@@ -92,7 +92,7 @@ load.biologic <-function(file)
       }
       data$Cycle_Index=cycles
     } else {
-      stop("Unable to determine cycle index for biologic data",call.=F)
+      warning("Unable to determine cycle index for biologic data",call.=F)
     }
   }
 
@@ -115,21 +115,23 @@ load.biologic <-function(file)
     }
   }
   #Use the sign of the current obtained earlier rather than ox_red to separate (dis)charge capacities
-  s=sign(data$Current.A.)
-  if(!'Discharge_Capacity.Ah.' %in% names(data)) {
-    if(all(c('Current.A.','capacity.mah') %in% names(data))) {
-      data$Discharge_Capacity.Ah.=rep_len(0,nrow(data))
-      data$Discharge_Capacity.Ah.[s==-1]=data$capacity.mah[s==-1]
-    } else {
-      stop("Unable to determine discharge capacity for biologic data",call.=F)
+  if('Current.A.' %in% names(data)) {
+    s=sign(data$Current.A.)
+    if(!'Discharge_Capacity.Ah.' %in% names(data)) {
+      if(all(c('Current.A.','capacity.mah') %in% names(data))) {
+        data$Discharge_Capacity.Ah.=rep_len(0,nrow(data))
+        data$Discharge_Capacity.Ah.[s==-1]=data$capacity.mah[s==-1]
+      } else {
+        warning("Unable to determine discharge capacity for biologic data",call.=F)
+      }
     }
-  }
-  if(!'Charge_Capacity.Ah.' %in% names(data)) {
-    if(all(c('Current.A.','capacity.mah') %in% names(data))) {
-      data$Charge_Capacity.Ah.=rep_len(0,nrow(data))
-      data$Charge_Capacity.Ah.[s==1]=data$capacity.mah[s==1]
-    } else {
-      stop("Unable to determine charge capacity for biologic data",call.=F)
+    if(!'Charge_Capacity.Ah.' %in% names(data)) {
+      if(all(c('Current.A.','capacity.mah') %in% names(data))) {
+        data$Charge_Capacity.Ah.=rep_len(0,nrow(data))
+        data$Charge_Capacity.Ah.[s==1]=data$capacity.mah[s==1]
+      } else {
+        warning("Unable to determine charge capacity for biologic data",call.=F)
+      }
     }
   }
 
@@ -137,8 +139,8 @@ load.biologic <-function(file)
   data$Step_Index=data$Step_Index+1
   data$Cycle_Index=data$Cycle_Index+1
   data$Current.A.=data$Current.A./1000
-  data$Discharge_Capacity.Ah.=abs(data$Discharge_Capacity.Ah.)/1000
-  data$Charge_Capacity.Ah.=abs(data$Charge_Capacity.Ah.)/1000
+  if('Discharge_Capacity.Ah.' %in% names(data)) data$Discharge_Capacity.Ah.=abs(data$Discharge_Capacity.Ah.)/1000
+  if('Charge_Capacity.Ah.' %in% names(data)) data$Charge_Capacity.Ah.=abs(data$Charge_Capacity.Ah.)/1000
 
   return(data)
 }
