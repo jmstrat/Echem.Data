@@ -234,13 +234,7 @@ load.biologic.mpr <-function(mprfile) {
   } else{
     stop(sprintf("Unrecognised version for data module: %s" ,modules[[data_module]]['version']),call.=F)
   }
-
-  #   We should check that there are no unknown headers. Python code is:
-  #   if sys.version_info.major <= 2:
-  #     assert(all((b == '\x00' for b in remaining_headers)))
-  #   else:
-  #     assert(not any(remaining_headers))
-
+  if(!all(remaining_headers==0)) warning('Unknown headers were found in the mpr file, ignoring')
 
   col_types = VMPdata_dtype_from_colIDs(column_types)
 
