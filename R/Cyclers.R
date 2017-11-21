@@ -40,7 +40,12 @@ guess_cycler <- function(file) {
   return(NA)
 }
 
-.cycler_normalise <- function(cycler_type) {
+#' Normalise a string to represent a cycler name
+#'
+#' @param cycler_type The string to normaliase
+#' @return The normalised string
+#' @export
+cycler_normalise <- function(cycler_type) {
   if(is.na(cycler_type)||length(cycler_type)==0) return(NA)
   cycler_type=tolower(cycler_type)
   cycler_type=gsub("[[:space:]]", "", cycler_type)

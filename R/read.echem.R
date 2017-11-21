@@ -27,7 +27,7 @@ read.echem <-function(path,...) {
     cycler_type=guess_cycler(echem_file)
   }
   cycler_types=names(cycler_types())
-  cycler_type=.cycler_normalise(cycler_type)
+  cycler_type=cycler_normalise(cycler_type)
 
   loader_functions=c(load.arbin,load.biologic,load.land, load.ivium, load.maccor, load.internal)
 
