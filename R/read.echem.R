@@ -40,8 +40,8 @@ read.echem <-function(path,...) {
 
   echem=as.echem.data.object(echem)
 
-  xcol(echem) <- which(names(echem)=='Test_Time.s.')
-  ycol(echem) <- which(names(echem)=='Voltage.V.')
+  jms.classes::xcol(echem) <- which(names(echem)=='Test_Time.s.')
+  jms.classes::ycol(echem) <- which(names(echem)=='Voltage.V.')
 
   if(cycler_type=='internal') return(echem) #Attributes already added
   #Add attributes:
