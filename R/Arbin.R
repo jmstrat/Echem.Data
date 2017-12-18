@@ -29,7 +29,7 @@ load.arbin <-function(file)
       for(i in 1:length(snums)) {
         s=snums[[i]]
         #Read
-        ws=tryCatch(readxl::.xldata(file,s), error = function (e) {
+        ws=tryCatch(.xldata(file,s), error = function (e) {
           jms.classes::log.debug("Got error %s, trying workaround.",e)
           ###WARNING: THE FOLLOWING IS A WORKAROUND FOR A BUG IN readxl --> THIS MAY BREAK###
 
