@@ -4,7 +4,7 @@ Title: Loads echem data
 Version: 1.0.0
 Author: Josh Stratford
 Maintainer: Josh Stratford <51674722+jmstrat@users.noreply.github.com>
-Description: 
+Description: Reads electrochemistry data files into a standard format.
 Imports: jms.classes,
          readxl
 License: 
