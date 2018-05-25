@@ -136,11 +136,21 @@ load.biologic <-function(file)
   }
 
   #Adjust units etc.
-  data$Step_Index=data$Step_Index+1
-  data$Cycle_Index=data$Cycle_Index+1
-  data$Current.A.=data$Current.A./1000
-  if('Discharge_Capacity.Ah.' %in% names(data)) data$Discharge_Capacity.Ah.=abs(data$Discharge_Capacity.Ah.)/1000
-  if('Charge_Capacity.Ah.' %in% names(data)) data$Charge_Capacity.Ah.=abs(data$Charge_Capacity.Ah.)/1000
+  if('Step_Index' %in% names(data)) {
+    data$Step_Index=data$Step_Index+1
+  }
+  if('Cycle_Index' %in% names(data)) {
+    data$Cycle_Index=data$Cycle_Index+1
+  }
+  if('Current.A.' %in% names(data)) {
+    data$Current.A.=data$Current.A./1000
+  }
+  if('Discharge_Capacity.Ah.' %in% names(data)) {
+    data$Discharge_Capacity.Ah.=abs(data$Discharge_Capacity.Ah.)/1000
+  }
+  if('Charge_Capacity.Ah.' %in% names(data)) {
+    data$Charge_Capacity.Ah.=abs(data$Charge_Capacity.Ah.)/1000
+  }
 
   return(data)
 }
