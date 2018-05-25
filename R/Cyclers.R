@@ -10,10 +10,12 @@ cycler_types <- function() {
 supported_file_extensions <- function() unique(unlist(cycler_types()))
 
 
-cycler_loader_functions=c(arbin=load.arbin,biologic=load.biologic,land=load.land, ivium=load.ivium, maccor=load.maccor, internal=load.internal)
+cycler_loader_functions <- function() {
+  c(arbin=load.arbin,biologic=load.biologic,land=load.land, ivium=load.ivium, maccor=load.maccor, internal=load.internal)
+}
 
 loader_for_cycler <- function(cycler) {
-  loader = cycler_loader_functions[[cycler]]
+  loader = cycler_loader_functions()[[cycler]]
   if(is.null(loader)) stop('Cannot get loader for "', cycler, '"')
   return(loader)
 }
