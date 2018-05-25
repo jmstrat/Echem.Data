@@ -3,7 +3,7 @@
 #' @export
 #' @rdname cycler_types
 cycler_types <- function() {
-  list(arbin=c('xlsx','xls'),biologic=c('mpr','mpt'),land=c('xlsx','xls','txt'),ivium=c('idf','txt'),maccor=c('txt'),internal=c('csv'))
+  list(arbin=c('xlsx','xls'),biologic=c('mpr','mpt'),land=c('cex','xlsx','xls','txt'),ivium=c('idf','txt'),maccor=c('txt'),internal=c('csv'))
 }
 #' @export
 #' @rdname cycler_types
@@ -33,9 +33,23 @@ guess_cycler <- function(file) {
   if(ext=='mpt' || ext=='mpr') {
     return('biologic')
   } else if(ext=='xlsx' || ext == 'xls') {
-    return('arbin')
+    #Could be arbin or land, so read the 1st line
+    #Get sheet names
+    sn=.xlsheets(file)
+    if(is.null(sn)) return(NA)
+
+    #Find sheet(s) containing data
+    arbin_sheets=grepl("^Channel_[[:digit:]]",sn)
+    if(any(arbin_sheets)) return('arbin')
+
+    land_sheets=grepl("^Record",sn)
+    if(any(land_sheets)) return('land')
+
+    return(NA)
   } else if(ext=='idf') {
     return('ivium')
+  } else if(ext=='cex') {
+    return('land')
   } else if(ext=='csv') {
     return('internal')
   } else if (ext=='txt') {
