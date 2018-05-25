@@ -33,7 +33,7 @@ load.ivium.data.file<-function(file) {
 
   data=read.table(text=lines[(pd+3):(pd+3+n_lines)])
   names(data) <- c("Test_Time.s.","Current.A.","Voltage.V.")
-  data=load.convert_T_C_V(data)
+  data=load.addMissingColumns(data)
 
   st=grep('starttime=',perl=T,lines)
   if(length(st))
@@ -53,5 +53,5 @@ load.ivium.txt<-function(file)
   }
   names(data) <- c("Test_Time.s.","Current.A.","Voltage.V.")
   data$Current.A.=data$Current.A./1000
-  load.convert_T_C_V(data)
+  load.addMissingColumns(data)
 }

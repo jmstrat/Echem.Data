@@ -95,7 +95,7 @@ load.maccor <- function(file) {
     data=data[data$MD!='S',]  #Not sure what s means, but the few rows with this flag don't seem to contain data
 
   #Normalise
-  data=load.convert_T_C_V(data)
+  data=load.addMissingColumns(data)
 
   #Add attributes
   try({

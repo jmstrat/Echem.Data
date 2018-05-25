@@ -1,4 +1,4 @@
-load.convert_T_C_V <- function(data) {
+load.addMissingColumns <- function(data) {
   #rest_steps=data$Current.A.[abs(data$Current.A.)<1e-8] #0.01 uA
   discharge_steps=data$Current.A.<(-1e-8)
   charge_steps=data$Current.A.>1e-8
