@@ -29,11 +29,9 @@ read.echem <-function(path,...) {
   cycler_types=names(cycler_types())
   cycler_type=cycler_normalise(cycler_type)
 
-  loader_functions=c(load.arbin,load.biologic,load.land, load.ivium, load.maccor, load.internal)
-
   if(is.na(cycler_type)) stop(paste0("Unknown cycler type! Known cyclers are: ",paste0(cycler_types,collapse=', ')),call. = FALSE)
 
-  func=loader_functions[[match(cycler_type,cycler_types)]]
+  func=loader_for_cycler(cycler_type)
   echem=func(echem_file)
 
   if(all(is.null(echem))) return(NA)
