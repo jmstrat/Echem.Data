@@ -49,7 +49,10 @@ load.ivium.txt<-function(file)
   jms.classes::log.info('Reading ivium .txt data from "%s"',file)
   data=read.table(file,sep="\t",header=TRUE)
   if(ncol(data)!=3) {
-    stop('Expected 3 column data format: Time (s), Current (A), Voltage (V)',call.=FALSE)
+    data = read.table(file,header=FALSE)
+    if(ncol(data)!=3) {
+      stop('Expected 3 column data format: Time (s), Current (A), Voltage (V)',call.=FALSE)
+    }
   }
   names(data) <- c("Test_Time.s.","Current.A.","Voltage.V.")
   data$Current.A.=data$Current.A./1000
