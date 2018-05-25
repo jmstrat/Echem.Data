@@ -41,6 +41,7 @@ load.biologic <-function(file)
                               Capacitance.discharge..b5.F="capacitance_discharge_uf",
                               X.I..mA="Current.A.",
                               dq.mA.h="dq_mah",
+                              dQ.mA.h="dQ_mah",
                               Q.discharge.mA.h="Discharge_Capacity.Ah.",
                               Q.charge.mA.h="Charge_Capacity.Ah.",
                               Capacity.mA.h="capacity.mah",
@@ -244,6 +245,8 @@ load.biologic.mpr <-function(mprfile) {
   } else{
     stop(sprintf("Unrecognised version for data module: %s" ,modules[[data_module]]['version']),call.=F)
   }
+
+  # Have seen at least one instance where
   if(!all(remaining_headers==0)) warning('Unknown headers were found in the mpr file, ignoring')
 
   col_types = VMPdata_dtype_from_colIDs(column_types)
@@ -275,7 +278,7 @@ load.biologic.mpr <-function(mprfile) {
       } else if(col_types$type[[i]]=='integer') {
         col_data=bitwAnd(col_types$mask[[i]],columnised_data[[1]])
       } else {
-        stop(sprintf("Unknown column type for flag in mpr file %s",col_types$type[[i]]),call.=FALSE)
+        warning(sprintf("Unknown column type for flag in mpr file %s. Some data will not be imported.",col_types$type[[i]]),call.=FALSE)
       }
     } else {
 
@@ -284,7 +287,7 @@ load.biologic.mpr <-function(mprfile) {
       } else if(col_types$type[[i]]=='numeric') {
         col_data=readBin(columnised_data[[which_column]], 'double', n = n_data_points, size = col_types$size[[i]],endian = "little")
       } else {
-        stop(sprintf("Unknown column type for data in mpr file %s",col_types$type[[i]]),call.=FALSE)
+        warning(sprintf("Unknown column type for data in mpr file %s. Some data will not be imported.",col_types$type[[i]]),call.=FALSE)
       }
       which_column=which_column+1
     }
@@ -379,15 +382,20 @@ VMPdata_dtype_from_colIDs <- function(colIDs){
       col_types$size[[i]]=4
       col_types$type[[i]]='numeric'
     }
-    # 6 is Ewe, 77 is <Ewe>, I don't see the difference
-    else if(colID %in% c(6, 77)) {
+    # 6 is Ewe, 77 and 174 are <Ewe>, I don't see the difference
+    else if(colID %in% c(6, 77, 174)) {
       col_types$name[[i]]='Ewe.V'
       col_types$size[[i]]=4
       col_types$type[[i]]='numeric'
     }
-    # Can't see any difference between 7 and 23
-    else if(colID %in% c(7, 23)) {
+    # 7 is relative to current cycle?, 23 to point 0??
+    else if(colID == 7) {
       col_types$name[[i]]='dq.mA.h'
+      col_types$size[[i]]=8
+      col_types$type[[i]]='numeric'
+    }
+    else if(colID == 23) {
+      col_types$name[[i]]='dQ.mA.h'
       col_types$size[[i]]=8
       col_types$type[[i]]='numeric'
     }
@@ -397,13 +405,33 @@ VMPdata_dtype_from_colIDs <- function(colIDs){
       col_types$size[[i]]=4
       col_types$type[[i]]='numeric'
     }
+    else if(colID == 9) {
+      col_types$name[[i]]='Ece.V'
+      col_types$size[[i]]=4
+      col_types$type[[i]]='numeric'
+    }
     else if(colID == 11) {
       col_types$name[[i]]='X.I..mA'
       col_types$size[[i]]=8
       col_types$type[[i]]='numeric'
     }
+    else if(colID == 13) {
+      col_types$name[[i]]='X.Q.Qo..mA.h'
+      col_types$size[[i]]=8
+      col_types$type[[i]]='numeric'
+    }
+    else if(colID == 16) {
+      col_types$name[[i]]='Analog.IN.1.V'
+      col_types$size[[i]]=4
+      col_types$type[[i]]='numeric'
+    }
     else if(colID == 19) {
       col_types$name[[i]]='control.V'
+      col_types$size[[i]]=4
+      col_types$type[[i]]='numeric'
+    }
+    else if(colID == 20) {
+      col_types$name[[i]]='control.mA'
       col_types$size[[i]]=4
       col_types$type[[i]]='numeric'
     }
@@ -457,6 +485,16 @@ VMPdata_dtype_from_colIDs <- function(colIDs){
       col_types$size[[i]]=4
       col_types$type[[i]]='numeric'
     }
+    else if(colID == 125) {
+      col_types$name[[i]]='Capacitance.charge..b5.F'
+      col_types$size[[i]]=8
+      col_types$type[[i]]='numeric'
+    }
+    else if(colID == 126) {
+      col_types$name[[i]]='Capacitance.discharge..b5.F'
+      col_types$size[[i]]=8
+      col_types$type[[i]]='numeric'
+    }
     else if(colID == 434) {
       col_types$name[[i]]='(Q-Qo).C'
       col_types$size[[i]]=4
@@ -465,11 +503,6 @@ VMPdata_dtype_from_colIDs <- function(colIDs){
     else if(colID == 435) {
       col_types$name[[i]]='dQ.C'
       col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 13) {
-      col_types$name[[i]]='X.Q.Qo..mA.h'
-      col_types$size[[i]]=8
       col_types$type[[i]]='numeric'
     }
     else if(colID == 467) {
@@ -481,26 +514,6 @@ VMPdata_dtype_from_colIDs <- function(colIDs){
       col_types$name[[i]]='half.cycle'
       col_types$size[[i]]=4
       col_types$type[[i]]='integer'
-    }
-    else if(colID == 126) {
-      col_types$name[[i]]='Capacitance.discharge..b5.F'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 125) {
-      col_types$name[[i]]='Capacitance.charge..b5.F'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 9) {
-      col_types$name[[i]]='Ece.V'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 16) {
-      col_types$name[[i]]='Analog.IN.1.V'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
     }
     else
       stop(sprintf("mpr column type %s not implemented", colID),call.=F)
