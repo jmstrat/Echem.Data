@@ -356,9 +356,6 @@ load.land.xls <- function(file) {
       n=gsub('[()]','.',n)
       names(dat)=n
       dat=as.data.frame(dat)
-      for(n in names(atts)) {
-        attr(dat,n)<-atts[n][[1]]
-      }
       return(dat)
     }, error=function(e) {
       jms.classes::log.debug("ERROR: %s",e)
