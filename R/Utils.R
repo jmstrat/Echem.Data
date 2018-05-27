@@ -48,15 +48,15 @@ load.addMissingColumns <- function(data) {
 
   if(!'Capacity.Ah.'%in% names(data)) {
     cap<-abs(data$Current.A.)*c(0,diff(data$Test_Time.s.))*1/3600
-    ncn=c(1,which(Ns_changes),nrow(data)+1)
     cap[Ns_changes]<-0
   }
   if(!'Step_Time.s.'%in% names(data)) {
     Step_Time.s.=data$Test_Time.s.
   }
 
-  if(!any(c('Capacity.Ah.','Step_Time.s.')%in% names(data))) {
+  if(!all(c('Capacity.Ah.','Step_Time.s.')%in% names(data))) {
     pst=0
+    ncn=c(1,which(Ns_changes),nrow(data)+1)
     for(i in 1:(length(ncn)-1)) {
       if(!'Capacity.Ah.'%in% names(data))
         cap[ncn[[i]]:(ncn[[i+1]]-1)]<-cumsum(cap[ncn[[i]]:(ncn[[i+1]]-1)])
