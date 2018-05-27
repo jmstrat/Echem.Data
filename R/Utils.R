@@ -4,7 +4,7 @@ load.addMissingColumns <- function(data) {
   charge_steps=data$Current.A.>1e-8
 
   if(!'Step_Index'%in% names(data)) {
-    data$Step_Index<-0
+    data$Step_Index<-1
     data$Step_Index[discharge_steps]<-2
     data$Step_Index[charge_steps]<-3
   }
