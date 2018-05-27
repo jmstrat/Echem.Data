@@ -3,7 +3,7 @@
   log <- capture.output({
     res <- tryCatch(
       {
-        excel_sheets(file)
+        readxl::excel_sheets(file)
       },
       error=function(e) {
         #Probably just wrong file extension, try xlsx
@@ -18,7 +18,7 @@
 #Read (if it fails then force xlsx) (supress prints)
 .xldata <- function(file, sheet) {
   log <- capture.output({
-    res <- tryCatch(readxl::read_excel(file,sheet), error = function(e) readxl:::read_xlsx(file,sheet))
+    res <- tryCatch(readxl::read_excel(file,sheet), error = function(e) readxl::read_xlsx(file,sheet))
   })
   return(res)
 }
