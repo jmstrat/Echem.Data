@@ -4,6 +4,7 @@ load.addMissingColumns <- function(data) {
   charge_steps=data$Current.A.>1e-8
 
   if(!'Step_Index'%in% names(data)) {
+    jms.classes::log.info('Data was missing the "Step_Index" column, using 1 for rest steps, 2 for discharge steps and 3 for charge steps.')
     data$Step_Index<-1
     data$Step_Index[discharge_steps]<-2
     data$Step_Index[charge_steps]<-3
@@ -14,10 +15,13 @@ load.addMissingColumns <- function(data) {
   Ns_changes=c(F,diff(data$Step_Index)!=0)
 
   if(!'Ns_changes'%in% names(data)) {
+    jms.classes::log.info('Data was missing the "Ns_changes" column, adding it.')
     data$Ns_changes=Ns_changes
   }
 
   if(!'Cycle_Index'%in% names(data)) {
+    jms.classes::log.info('Data was missing the "Cycle_Index" column, adding it.')
+    jms.classes::log.warn('Cycle index generation currently assumes step indexes of 1, 2 and 3')
     if(!length(step2)) {
       #No Discharge data
       step2=Inf
@@ -66,16 +70,21 @@ load.addMissingColumns <- function(data) {
       }
     }
   }
-  if(!'Capacity.Ah.'%in% names(data))
+  if(!'Capacity.Ah.'%in% names(data)) {
+    jms.classes::log.info('Data was missing the "Capacity.Ah." column, adding it.')
     data$Capacity.Ah.<-cap
+  }
   if(!'Discharge_Capacity.Ah.'%in% names(data)) {
+    jms.classes::log.info('Data was missing the "Discharge_Capacity.Ah." and / or "Charge_Capacity.Ah." columns, adding them.')
     data$Discharge_Capacity.Ah.<-0
     data$Charge_Capacity.Ah.<-0
     data$Discharge_Capacity.Ah.[discharge_steps]<-data$Capacity.Ah.[discharge_steps]
     data$Charge_Capacity.Ah.[charge_steps]<-data$Capacity.Ah.[charge_steps]
   }
-  if(!'Step_Time.s.'%in% names(data))
+  if(!'Step_Time.s.'%in% names(data)) {
+    jms.classes::log.info('Data was missing the "Step_Time.s." column, adding it.')
     data$Step_Time.s.<-Step_Time.s.
+  }
 
   return(data)
 }

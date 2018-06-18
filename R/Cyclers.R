@@ -30,14 +30,19 @@ guess_cycler <- function(file) {
   ext= regexpr("\\.([[:alnum:]]+)$", file)
   ext=ifelse(ext > -1L, substring(file, ext + 1L), "")
 
+  jms.classes::log.info('Attempting to guess the cycler for "%s" using its extension ("%s")', file, ext)
+
   if(ext=='mpt' || ext=='mpr') {
     return('biologic')
   } else if(ext=='xlsx' || ext == 'xls') {
+    jms.classes::log.info('Found an excel workbook, attempting to read the sheet names to guess the cycler type')
     #Could be arbin or land, so read the 1st line
     #Get sheet names
     sn=.xlsheets(file)
-    if(is.null(sn)) return(NA)
-
+    if(is.null(sn)) {
+      jms.classes::log.error('Could not find any worksheets, unable to determine cycler type for "%s"', file)
+      return(NA)
+    }
     #Find sheet(s) containing data
     arbin_sheets=grepl("^Channel_[[:digit:]]",sn)
     if(any(arbin_sheets)) return('arbin')
@@ -45,6 +50,7 @@ guess_cycler <- function(file) {
     land_sheets=grepl("^Record",sn)
     if(any(land_sheets)) return('land')
 
+    jms.classes::log.error('Unable to map sheet names to a cycler type')
     return(NA)
   } else if(ext=='idf') {
     return('ivium')
@@ -53,6 +59,7 @@ guess_cycler <- function(file) {
   } else if(ext=='csv') {
     return('internal')
   } else if (ext=='txt') {
+    jms.classes::log.info('Found a plain text .txt file, attempting to read the table header to guess the cycler type')
     #Could be land or ivium, so read the 1st line
     header_text=readLines(file,n=1)
     header=read.table(sep="\t",header=T,text=header_text,quote="")
@@ -62,6 +69,7 @@ guess_cycler <- function(file) {
       return('maccor')
     return('land')
   }
+  jms.classes::log.error('Could not determine cycler type for "%s"', file)
   return(NA)
 }
 

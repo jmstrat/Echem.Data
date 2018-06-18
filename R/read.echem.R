@@ -19,10 +19,13 @@ read.echem <-function(path,...) {
   if(is.null(echem_file)|is.na(echem_file)|echem_file=='')
     return(NA)
 
+  jms.classes::log.info('Reading echem data from "%s"',echem_file)
+
   if(!file.exists(echem_file)){
     #file doesn't exist
     stop("Unable to find file to load -- is the path typed correctly?",call. = FALSE)
   }
+  jms.classes::log.debug('"%s" exists.',echem_file)
   if(is.na(cycler_type)) {
     cycler_type=guess_cycler(echem_file)
   }
@@ -31,10 +34,14 @@ read.echem <-function(path,...) {
 
   if(is.na(cycler_type)) stop(paste0("Unknown cycler type! Known cyclers are: ",paste0(cycler_types,collapse=', ')),call. = FALSE)
 
+  jms.classes::log.info('Treating "%s" as a %s file',echem_file, cycler_type)
+
   func=loader_for_cycler(cycler_type)
   echem=func(echem_file)
 
   if(all(is.null(echem))) return(NA)
+
+  jms.classes::log.info('Successfully loaded data for "%s"',echem_file)
 
   echem=as.echem.data.object(echem)
 
