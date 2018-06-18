@@ -10,8 +10,6 @@ load.addMissingColumns <- function(data) {
     data$Step_Index[charge_steps]<-3
   }
 
-  step2=which(discharge_steps)
-  step3=which(charge_steps)
   Ns_changes=c(F,diff(data$Step_Index)!=0)
 
   if(!'Ns_changes'%in% names(data)) {
@@ -22,6 +20,8 @@ load.addMissingColumns <- function(data) {
   if(!'Cycle_Index'%in% names(data)) {
     jms.classes::log.info('Data was missing the "Cycle_Index" column, adding it.')
     jms.classes::log.warn('Cycle index generation currently assumes step indexes of 1, 2 and 3')
+    step2=which(discharge_steps)
+    step3=which(charge_steps)
     if(!length(step2)) {
       #No Discharge data
       step2=Inf
