@@ -52,7 +52,7 @@ read.echem <-function(path,...) {
   #Add attributes:
   attr(echem,'filepath')<-echem_file
   attr(echem,'filename')<-basename(echem_file)
-  attr(echem,'cycler')<-cycler_type
+  attr(echem,'Cycler')<-cycler_type
 
   echem
 }
