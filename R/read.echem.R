@@ -50,8 +50,6 @@ read.echem <-function(path,...) {
 
   if(cycler_type=='internal') return(echem) #Attributes already added
   #Add attributes:
-  attr(echem,'filepath')<-echem_file
-  attr(echem,'filename')<-basename(echem_file)
   attr(echem,'Cycler')<-cycler_type
 
   echem
