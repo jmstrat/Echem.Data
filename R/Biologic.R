@@ -18,38 +18,51 @@ load.biologic <-function(file)
     data=load.biologic.mpt(file)
   }
 
-  #Rename columns
-  for(i in 1:length(names(data))) {
-    n=names(data)[[i]]
-    names(data)[[i]]<-vswitch(n,
-                              mode="mode",
-                              ox.red="ox_red",
-                              error="error",
-                              control.changes="Control_changes",
-                              Ns.changes="Ns_changes",
-                              counter.inc.="counter_inc",
-                              Ns="Step_Index",
-                              time.s="Test_Time.s.",
-                              control.V.mA="control_v_ma",
-                              Ewe.V="Voltage.V.",
-                              X.Q.Qo..mA.h="q-q0_mah",
-                              Analog.IN.1.V="analog_in_1_v",
-                              P.W="p_w",
-                              Q.charge.discharge.mA.h="q_charge_discharge_mah",
-                              half.cycle="half_cycle",
-                              Capacitance.charge..b5.F="capacitance_charge_uf",
-                              Capacitance.discharge..b5.F="capacitance_discharge_uf",
-                              X.I..mA="Current.A.",
-                              dq.mA.h="dq_mah",
-                              dQ.mA.h="dQ_mah",
-                              Q.discharge.mA.h="Discharge_Capacity.Ah.",
-                              Q.charge.mA.h="Charge_Capacity.Ah.",
-                              Capacity.mA.h="capacity.mah",
-                              Efficiency..="efficiency.percent",
-                              control.V="control_v",
-                              control.mA="control_ma",
-                              cycle.number="Cycle_Index",
-                              x="x")
+  jms.classes::log.debug("Normalising biologic data")
+
+  # Rename columns for consistency between cyclers
+  cnames <- names(data)
+  for (i in 1:length(cnames)) {
+    n <- cnames[[i]]
+    newname <- vswitch(n,
+                       mode="mode",
+                       ox.red="ox_red",
+                       error="error",
+                       control.changes="Control_changes",
+                       Ns.changes="Ns_changes",
+                       counter.inc.="counter_inc",
+                       Ns="Step_Index",
+                       # If time is a date, we also add "Date_Time"
+                       time.s="Test_Time.s.",
+                       control.V.mA="control_v_ma",
+                       Ewe.V="Voltage.V.",
+                       X.Q.Qo..mA.h="q-q0_mah",
+                       Analog.IN.1.V="analog_in_1_v",
+                       P.W="p_w",
+                       Q.charge.discharge.mA.h="q_charge_discharge_mah",
+                       half.cycle="half_cycle",
+                       Capacitance.charge..b5.F="capacitance_charge_uf",
+                       Capacitance.discharge..b5.F="capacitance_discharge_uf",
+                       X.I..mA="Current.A.",
+                       dq.mA.h="dq_mah",
+                       dQ.mA.h="dQ_mah",
+                       Q.discharge.mA.h="Discharge_Capacity.Ah.",
+                       Q.charge.mA.h="Charge_Capacity.Ah.",
+                       Capacity.mA.h="capacity.mah",
+                       Efficiency..="efficiency.percent",
+                       Energy.charge.W.h="Charge_Energy.Wh.",
+                       Energy.discharge.W.h="Discharge_Energy.Wh.",
+                       control.V="control_v",
+                       control.mA="control_ma",
+                       cycle.number="Cycle_Index",
+                       x="x")
+    if(is.na(newname)) {
+      jms.classes::log.warn("Unmapped column type: %s", n)
+      warning("Unmapped column type: ", n)
+    } else {
+      names(data)[[i]] <- newname
+    }
+  }
   }
 
   if(!'Current.A.' %in% names(data)) {
