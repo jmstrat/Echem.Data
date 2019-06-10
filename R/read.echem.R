@@ -31,15 +31,16 @@ read.echem <-function(path,...) {
   }
   cycler_types=names(cycler_types())
   cycler_type=cycler_normalise(cycler_type)
+  if (is.na(cycler_type)) stop(paste0("Unknown cycler type! Known cyclers are: ",
+                                      paste0(cycler_types, collapse=", ")), call.=FALSE)
 
-  if(is.na(cycler_type)) stop(paste0("Unknown cycler type! Known cyclers are: ",paste0(cycler_types,collapse=', ')),call. = FALSE)
+  jms.classes::log.info('Treating "%s" as a %s file', echem_file, cycler_type)
 
-  jms.classes::log.info('Treating "%s" as a %s file',echem_file, cycler_type)
+  echem <- loader_for_cycler(cycler_type, echem_file)
 
-  func=loader_for_cycler(cycler_type)
-  echem=func(echem_file)
+  if (all(is.null(echem))) return(NA)
 
-  if(all(is.null(echem))) return(NA)
+
 
   jms.classes::log.info('Successfully loaded data for "%s"',echem_file)
 

@@ -9,15 +9,21 @@ cycler_types <- function() {
 #' @rdname cycler_types
 supported_file_extensions <- function() unique(unlist(cycler_types()))
 
+.cycler_loader_functions <- c(
+  arbin="load.arbin",
+  biologic="load.biologic",
+  land="load.land",
+  ivium="load.ivium",
+  maccor="load.maccor",
+  internal="load.internal"
+)
 
-cycler_loader_functions <- function() {
-  c(arbin=load.arbin,biologic=load.biologic,land=load.land, ivium=load.ivium, maccor=load.maccor, internal=load.internal)
-}
-
-loader_for_cycler <- function(cycler) {
-  loader = cycler_loader_functions()[[cycler]]
-  if(is.null(loader)) stop('Cannot get loader for "', cycler, '"')
-  return(loader)
+loader_for_cycler <- function(cycler, echem_file) {
+  loader <- .cycler_loader_functions[[cycler]]
+  if (is.null(loader)) stop('Cannot find loader for "', cycler, '"')
+  # This preserves the stack trace as loader is a string, not an
+  # anonymous function
+  return(do.call(loader, list(echem_file)))
 }
 
 #' Guess cycler for file
