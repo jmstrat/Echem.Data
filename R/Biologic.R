@@ -385,192 +385,93 @@ read_VMP_modules <- function(fileobj, read_module_data=TRUE) {
   }
 }
 
+#### MPR Column definitions ####
+
+# Flags are stored together as a single byte at the start of a row
+VMP_colID_flag_map <- list(
+  `1`=list(name="mode", mask=3, type="integer"),
+  `2`=list(name="ox.red", mask=4, type="logical"),
+  `3`=list(name="error", mask=8, type="logical"),
+  `21`=list(name="control.changes", mask=16, type="logical"),
+  `31`=list(name="Ns.changes", mask=32, type="logical"),
+  # Missing one here?
+  `65`=list(name="counter.inc.", mask=128, type="logical")
+)
+
+# Data makes up the remainder of the row
+VMP_colID_data_map <- list(
+  `4`=list(name="time.s", size=8, type="numeric"),
+  `5`=list(name="control.V.mA", size=4, type="numeric"),
+
+  # 6 is Ewe, 77 and 174 are <Ewe>, I don"t see the difference
+  `6`=list(name="Ewe.V", size=4, type="numeric"),
+  `77`=list(name="Ewe.V", size=4, type="numeric"),
+  `174`=list(name="Ewe.V", size=4, type="numeric"),
+
+  # 7 is relative to current cycle?, 23 to point 0??
+  `7`=list(name="dq.mA.h", size=8, type="numeric"),
+  `23`=list(name="dQ.mA.h", size=8, type="numeric"),
+
+  # 76 is <I>, 8 is either I or <I> ??
+  `8`=list(name="X.I..mA", size=4, type="numeric"),
+  `76`=list(name="X.I..mA", size=4, type="numeric"),
+
+  `9`=list(name="Ece.V", size=4, type="numeric"),
+  `11`=list(name="X.I..mA", size=8, type="numeric"),
+  `13`=list(name="X.Q.Qo..mA.h", size=8, type="numeric"),
+  `16`=list(name="Analog.IN.1.V", size=4, type="numeric"),
+  `19`=list(name="control.V", size=4, type="numeric"),
+  `20`=list(name="control.mA", size=4, type="numeric"),
+  # 23 defined above
+  `24`=list(name="cycle.number", size=8, type="numeric"),
+  `32`=list(name="freq.Hz", size=4, type="numeric"),
+  `33`=list(name="|Ewe|.V", size=4, type="numeric"),
+  `34`=list(name="|I|.A", size=4, type="numeric"),
+  `35`=list(name="Phase(Z).deg", size=4, type="numeric"),
+  `36`=list(name="|Z|.Ohm", size=4, type="numeric"),
+  `37`=list(name="Re(Z).Ohm", size=4, type="numeric"),
+  `38`=list(name="-Im(Z).Ohm", size=4, type="numeric"),
+  `39`=list(name="I.Range", size=2, type="integer"),
+  `70`=list(name="P.W", size=4, type="numeric"),
+  # 76 defined above
+  # 77 defined above
+  `123`=list(name="Energy.charge.W.h", size=8, type="numeric"),
+  `124`=list(name="Energy.discharge.W.h", size=8, type="numeric"),
+  `125`=list(name="Capacitance.charge..b5.F", size=8, type="numeric"),
+  `126`=list(name="Capacitance.discharge..b5.F", size=8, type="numeric"),
+  `131`=list(name="Ns", size=2, type="integer"),
+  `169`=list(name="Cs.uF", size=4, type="numeric"),
+  `172`=list(name="Cp.uF", size=4, type="numeric"),
+  # 174 defined above
+  `434`=list(name="(Q-Qo).C", size=4, type="numeric"),
+  `435`=list(name="dQ.C", size=4, type="numeric"),
+  `467`=list(name="Q.charge.discharge.mA.h", size=8, type="numeric"),
+  `468`=list(name="half.cycle", size=4, type="integer"),
+  `473`=list(name="THD Ewe.pct", size=4, type="numeric"),
+  `474`=list(name="THD I.pct", size=4, type="integer"),
+  `476`=list(name="NSD Ewe.pct", size=4, type="integer"),
+  `477`=list(name="NSD I.pct", size=4, type="integer"),
+  `479`=list(name="NSR Ewe.pct", size=4, type="integer"),
+  `480`=list(name="NSR I.pct", size=4, type="integer")
+)
+
+# Combine the two maps
+VMP_colID_map <- do.call(rbind, append(
+  lapply(VMP_colID_flag_map, function(x) {x$size=0; x$flag=TRUE; x[c("name", "size", "type", "mask", "flag")]}),
+  lapply(VMP_colID_data_map, function(x) {x$mask=NA; x$flag=FALSE; x})
+))
+
 VMPdata_dtype_from_colIDs <- function(colIDs){
-  col_types=list(name=c(),size=rep_len(0,length(colIDs)),type=c(),flag=rep_len(FALSE,length(colIDs)),mask=rep_len(NA,length(colIDs)))
-  for(i in 1:length(colIDs)) {
-    colID=colIDs[[i]]
-    if(colID == 1) {
-      col_types$name[[i]]='mode'
-      col_types$mask[[i]]=3
-      col_types$type[[i]]='integer'
-      col_types$flag[[i]]=TRUE
-    } else if(colID == 2)  {
-      col_types$name[[i]]='ox.red'
-      col_types$mask[[i]]=4
-      col_types$type[[i]]='logical'
-      col_types$flag[[i]]=TRUE
-    } else if(colID == 3) {
-      col_types$name[[i]]='error'
-      col_types$mask[[i]]=8
-      col_types$type[[i]]='logical'
-      col_types$flag[[i]]=TRUE
-    } else if(colID == 21) {
-      col_types$name[[i]]='control.changes'
-      col_types$mask[[i]]=16
-      col_types$type[[i]]='logical'
-      col_types$flag[[i]]=TRUE
-    } else if(colID == 31) {
-      col_types$name[[i]]='Ns.changes'
-      col_types$mask[[i]]=32
-      col_types$type[[i]]='logical'
-      col_types$flag[[i]]=TRUE
-    } else if(colID == 65) {
-      col_types$name[[i]]='counter.inc.'
-      col_types$mask[[i]]=128
-      col_types$type[[i]]='logical'
-      col_types$flag[[i]]=TRUE
-    } else if(colID ==131 ) {
-      col_types$name[[i]]='Ns'
-      col_types$size[[i]]=2
-      col_types$type[[i]]='integer'
-    }  else if(colID == 4) {
-      col_types$name[[i]]='time.s'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 5) {
-      col_types$name[[i]]='control.V.mA'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    # 6 is Ewe, 77 and 174 are <Ewe>, I don't see the difference
-    else if(colID %in% c(6, 77, 174)) {
-      col_types$name[[i]]='Ewe.V'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    # 7 is relative to current cycle?, 23 to point 0??
-    else if(colID == 7) {
-      col_types$name[[i]]='dq.mA.h'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 23) {
-      col_types$name[[i]]='dQ.mA.h'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    # 76 is <I>, 8 is either I or <I> ??
-    else if(colID %in% c(8, 76)) {
-      col_types$name[[i]]='X.I..mA'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 9) {
-      col_types$name[[i]]='Ece.V'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 11) {
-      col_types$name[[i]]='X.I..mA'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 13) {
-      col_types$name[[i]]='X.Q.Qo..mA.h'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 16) {
-      col_types$name[[i]]='Analog.IN.1.V'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 19) {
-      col_types$name[[i]]='control.V'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 20) {
-      col_types$name[[i]]='control.mA'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 24) {
-      col_types$name[[i]]='cycle.number'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 32) {
-      col_types$name[[i]]='freq.Hz'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 33) {
-      col_types$name[[i]]='|Ewe|.V'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 34) {
-      col_types$name[[i]]='|I|.A'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 35) {
-      col_types$name[[i]]='Phase(Z).deg'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 36) {
-      col_types$name[[i]]='|Z|.Ohm'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 37) {
-      col_types$name[[i]]='Re(Z).Ohm'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 38) {
-      col_types$name[[i]]='-Im(Z).Ohm'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 39) {
-      col_types$name[[i]]='I.Range'
-      col_types$size[[i]]=2
-      col_types$type[[i]]='integer'
-    }
-    else if(colID == 70) {
-      col_types$name[[i]]='P.W'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 125) {
-      col_types$name[[i]]='Capacitance.charge..b5.F'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 126) {
-      col_types$name[[i]]='Capacitance.discharge..b5.F'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 434) {
-      col_types$name[[i]]='(Q-Qo).C'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 435) {
-      col_types$name[[i]]='dQ.C'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 467) {
-      col_types$name[[i]]='Q.charge.discharge.mA.h'
-      col_types$size[[i]]=8
-      col_types$type[[i]]='numeric'
-    }
-    else if(colID == 468) {
-      col_types$name[[i]]='half.cycle'
-      col_types$size[[i]]=4
-      col_types$type[[i]]='integer'
-    }
-    else
-      stop(sprintf("mpr column type %s not implemented", colID),call.=F)
+  colIDs <- as.character(colIDs)
+
+  missing <- ! colIDs %in% rownames(VMP_colID_map)
+  if(any(missing)) {
+    missing <- colIDs[missing]
+    s <- ifelse(length(missing) > 1, "s", "")
+    missing <- paste0(missing, collapse=", ")
+    jms.classes::log.error("mpr column type%s %s not implemented", s, missing)
+    stop(sprintf("mpr column type%s %s not implemented", s, missing), call.=F)
   }
-  return(col_types)
-}
 
 #' Get additional attributes from a biologic mpt file
 #'
@@ -591,4 +492,11 @@ VMPdata_dtype_from_colIDs <- function(colIDs){
       atts$channel=substr(header_text[[channel_line]],18,30)
   },silent=TRUE)
   atts
+  col_types <- VMP_colID_map[colIDs,]
+  # Columns --> list of vectors maintaining mode
+  col_types <- lapply(split(col_types, col(col_types)), unlist, F, F)
+  # Restore names
+  names(col_types) <- c("name", "size", "type", "mask", "flag")
+
+  return(col_types)
 }
