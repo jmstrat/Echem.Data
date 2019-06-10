@@ -43,11 +43,36 @@ read.echem <-function(path,...) {
 
 
   jms.classes::log.info('Successfully loaded data for "%s"',echem_file)
+  jms.classes::xcol(echem) <- "Test_Time.s."
+  jms.classes::xscale(echem) <- 1/3600
+  jms.classes::xlab(echem) <- expression("Time / h")
+  jms.classes::ycol(echem) <- "Voltage.V."
 
   echem=as.echem.data.object(echem)
+  # Check that columns were found
+  xc <- jms.classes::xcol(echem)
+  yc <- jms.classes::ycol(echem)
+  yc2 <- jms.classes::y2col(echem)
+  if (length(xc) != 1 || is.na(xc)) {
+    jms.classes::log.warn(
+      "xcol is not correct: xcol = [%s]",
+      paste0(xc, collapse=","))
+    warning("Unable to find time column")
+  }
+  if (length(yc) != 1 || is.na(yc)) {
+    jms.classes::log.warn(
+      "ycol is not correct: ycol = [%s]",
+      paste0(yc, collapse=","))
+    warning("Unable to find voltage column")
+  }
+  if (length(yc2) != 1 || !is.na(yc2)) {
+    jms.classes::log.warn(
+      "y2col is not correct: y2col = [%s]",
+      paste0(yc2, collapse=","))
+    warning("A second y axis has been specified")
+  }
 
-  jms.classes::xcol(echem) <- which(names(echem)=='Test_Time.s.')
-  jms.classes::ycol(echem) <- which(names(echem)=='Voltage.V.')
+  jms.classes::log.debug("Set xcol = %s; ycol = %s; y2col = %s", xc, yc, yc2)
 
   if(cycler_type=='internal') return(echem) #Attributes already added
   #Add attributes:
