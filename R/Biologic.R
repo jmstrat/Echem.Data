@@ -203,10 +203,6 @@ load.biologic <-function(file)
 #' load.biologic.mpt("/path/to/file.mpt")
 #' @keywords internal
 load.biologic.mpt <- function(file) {
-  skip=as.integer(substr(readLines(file,n=2)[[2]],18,21))
-  header_text=readLines(file,n=skip+1)
-  atts=.get_biologic_attributes(header_text)
-  header=read.table(sep="\t",header=T,text=header_text[c(skip,skip+1)])
   data=read.table(file,sep="\t",skip=skip,header=FALSE,na.strings="XXX")
   names(data)<-names(header)
 
@@ -219,6 +215,23 @@ load.biologic.mpt <- function(file) {
 
   for(n in names(atts)) {
     attr(data,n)<-atts[n][[1]]
+  file_header <- readLines(file, n=2)
+  if (file_header[[1]] != 'EC-Lab ASCII FILE') {
+    # e.g. If "Save Headline" is not selected
+    jms.classes::log.warn('.mpt file does not appear to have a header')
+    warning('No header found for .mpt file')
+
+    # We assume the file just contains the data table, with the column headings
+    # as the first row
+    skip <- 1
+  } else {
+    # Nb header lines : ...
+    skip <- as.integer(substr(file_header[[2]], 18, 21))
+  }
+
+  header_text <- readLines(file, n=skip + 1)
+  atts <- .get_biologic_attributes(header_text)
+  header <- read.table(sep="\t", header=T, text=header_text[c(skip, skip + 1)], stringsAsFactors=FALSE)
   }
 
   return(data)
