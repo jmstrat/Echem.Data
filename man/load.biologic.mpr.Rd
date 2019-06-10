@@ -14,7 +14,7 @@ A data frame containing the echem data
 }
 \description{
 This function is used to import echem data from a biologic mpr file.
-Ported from Chris Kerr's python script (https://github.com/chatcannon/galvani) and modified to support additional data types.
+Originally based on Chris Kerr's python script (https://github.com/chatcannon/galvani) and modified to support additional data types.
 }
 \examples{
 load.biologic.mpr("/path/to/file.mpr")

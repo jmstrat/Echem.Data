@@ -4,16 +4,16 @@
 \alias{load.internal}
 \title{Read echem data that has previously been exported to a csv file}
 \usage{
-load.internal(file)
+load.internal(path)
 }
 \arguments{
-\item{file}{Path to data file}
+\item{path}{Path to data file}
 }
 \value{
 A data frame containing the echem data
 }
 \description{
-This function is used to import echem data from a csv file that was generated using \code{\link{export_echem}}.
+This function is used to import echem data from a csv file that was generated using \code{\link{export}}.
 }
 \examples{
 load.internal("/path/to/file.csv")
