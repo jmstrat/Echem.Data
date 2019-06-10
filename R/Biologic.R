@@ -7,15 +7,16 @@
 #' load.biologic("/path/to/file.mpt")
 #' load.biologic("/path/to/file.mpr")
 #' @keywords internal
-load.biologic <-function(file)
-{
-  ext= regexpr("\\.([[:alnum:]]+)$", file)
-  ext=ifelse(ext > -1L, substring(file, ext + 1L), "")
+load.biologic <- function(file) {
+  ext <- regexpr("\\.([[:alnum:]]+)$", file)
+  ext <- ifelse(ext > -1L, substring(file, ext + 1L), "")
 
-  if(ext=='mpr') {
-    data=load.biologic.mpr(file)
-  } else if(ext=='mpt') {
-    data=load.biologic.mpt(file)
+  if (ext == "mpr") {
+    data <- load.biologic.mpr(file)
+  } else if (ext == "mpt") {
+    data <- load.biologic.mpt(file)
+  } else {
+    stop(ext, " is not a known extension for a biologic file", call.=FALSE)
   }
 
   jms.classes::log.debug("Normalising biologic data")
@@ -194,6 +195,10 @@ load.biologic <-function(file)
   return (data)
 }
 
+#===========#
+#### MPT ####
+#===========#
+
 #' Read Echem Data for Biologic Cycler
 #'
 #' This function is used to import echem data from a biologic mpt file.
@@ -203,18 +208,6 @@ load.biologic <-function(file)
 #' load.biologic.mpt("/path/to/file.mpt")
 #' @keywords internal
 load.biologic.mpt <- function(file) {
-  data=read.table(file,sep="\t",skip=skip,header=FALSE,na.strings="XXX")
-  names(data)<-names(header)
-
-  #Convert flags to logical
-  data$ox.red=as.logical(data$ox.red)
-  data$error=as.logical(data$error)
-  data$control.changes=as.logical(data$control.changes)
-  data$Ns.changes=as.logical(data$Ns.changes)
-  data$counter.inc.=as.logical(data$counter.inc.)
-
-  for(n in names(atts)) {
-    attr(data,n)<-atts[n][[1]]
   file_header <- readLines(file, n=2)
   if (file_header[[1]] != 'EC-Lab ASCII FILE') {
     # e.g. If "Save Headline" is not selected
@@ -232,155 +225,225 @@ load.biologic.mpt <- function(file) {
   header_text <- readLines(file, n=skip + 1)
   atts <- .get_biologic_attributes(header_text)
   header <- read.table(sep="\t", header=T, text=header_text[c(skip, skip + 1)], stringsAsFactors=FALSE)
+  data <- read.table(file, sep="\t", skip=skip, header=FALSE, na.strings="XXX", stringsAsFactors=FALSE)
+
+  names(data) <- names(header)
+
+  # Convert flags to logical
+  data$ox.red <- as.logical(data$ox.red)
+  data$error <- as.logical(data$error)
+  data$control.changes <- as.logical(data$control.changes)
+  data$Ns.changes <- as.logical(data$Ns.changes)
+  data$counter.inc. <- as.logical(data$counter.inc.)
+
+  for (n in names(atts)) {
+    attr(data, n) <- atts[n][[1]]
   }
 
   return(data)
 }
 
+#' Get additional attributes from a biologic mpt file
+#'
+#' This function finds the date and channel for a biologic dataset
+#'
+#' @param header_lines The header of a biologic mpt file
+#' @return A list of attributes that were found
+#' @keywords internal
+.get_biologic_attributes <- function(header_text) {
+  # TODO: there are more details that we could parse here
+  atts <- list()
+  try({
+    date_line <- suppressWarnings(grep("Acquisition started on", header_text))
+    if (length(date_line))
+      atts$date <- as.Date(substr(header_text[[date_line]], 26, 44), format="%m/%d/%Y %T")
+
+    channel_line <- suppressWarnings(grep("Run on channel", header_text))
+    if (length(channel_line))
+      atts$channel<- substr(header_text[[channel_line]], 18, 30)
+  }, silent=TRUE)
+  atts
+}
+
+
+#===========#
+#### MPR ####
+#===========#
+
+
 #' Read Echem Data for Biologic Cycler
 #'
 #' This function is used to import echem data from a biologic mpr file.
-#' Ported from Chris Kerr's python script (https://github.com/chatcannon/galvani) and modified to support additional data types.
+#' Originally based on Chris Kerr's python script (https://github.com/chatcannon/galvani) and modified to support additional data types.
 #' @param file Path to data file
 #' @return A data frame containing the echem data
 #' @examples
 #' load.biologic.mpr("/path/to/file.mpr")
 #' @keywords internal
-load.biologic.mpr <-function(mprfile) {
-  mpr_file = file(mprfile, 'rb')
-  mpr_magic = c(charToRaw('BIO-LOGIC MODULAR FILE\x1a                         '),rep_len(as.raw(0),4))
-  magic = readBin(mpr_file,what='raw',n=length(mpr_magic))
-  if(!all(magic == mpr_magic))
-    stop('Unknown magic found in .mpr file',call.=F)
+load.biologic.mpr <- function(mprfile) {
+  jms.classes::log.debug("Reading biologic modular file (.mpr)")
+  mpr_file <- file(mprfile, "rb")
+  mpr_magic <- c(charToRaw("BIO-LOGIC MODULAR FILE\x1a                         "), rep_len(as.raw(0), 4))
+  magic <- readBin(mpr_file, what="raw", n=length(mpr_magic))
+  if (!all(magic == mpr_magic))
+    stop("Unknown magic found in .mpr file", call.=F)
 
-  modules = read_VMP_modules(mpr_file)
-
+  modules <- read_VMP_modules(mpr_file)
+  jms.classes::log.debug("Found %s modules", length(modules))
   close(mpr_file)
 
-  settings_mod=data_module=maybe_log_module=NA
-  for(m in 1:length(modules)) {
-    if(modules[[m]]['shortname'] == 'Set   ')
-      settings_mod = m
-    if(modules[[m]]['shortname'] == 'data  ')
-      data_module = m
-    if(modules[[m]]['shortname'] == 'LOG   ')
-      maybe_log_module = m
-    #We also have External Device module (for e.g. temperature probes) -- data format currently unknown
+  settings_mod <- data_module <- maybe_log_module <- NULL
+  for (m in 1:length(modules)) {
+    if (modules[[m]]["shortname"] == "Set   ")
+      settings_mod <- m # IGNORED
+    if (modules[[m]]["shortname"] == "data  ")
+      data_module <- m
+    if (modules[[m]]["shortname"] == "LOG   ")
+      maybe_log_module <- m # IGNORED
+    # We also have External Device module (for e.g. temperature probes) -- data format currently unknown
   }
 
-  n_data_points= sum(2^.subset(0:31, as.logical(rawToBits(modules[[data_module]]$data[1:4]))))
-  n_columns = sum(2^.subset(0:7, as.logical(rawToBits(modules[[data_module]]$data[5]))))
-
-  if(!n_data_points>0) {
-    stop("Invalid number of data points found in mpr file",call.=F)
-  }
-  if(!n_columns>0) {
-    stop("Invalid number of data columns found in mpr file",call.=F)
+  if(is.null(data_module)) {
+    available_modules <- sapply(modules, function(x) x[["shortname"]])
+    available_modules <- paste0(available_modules, collapse=', ')
+    jms.classes::log.error("Data module not found, available modules:\n%s", available_modules)
+    stop("Data module not found", call.=F)
   }
 
-  if(modules[[data_module]]['version'] == 0) {
-    #1 byte unsigned integer
-    column_types = as.integer(modules[[data_module]]$data[6:(5+n_columns)])
-    remaining_headers = modules[[data_module]]$data[(5 + n_columns):100]
-    main_data = modules[[data_module]]$data[101:length(modules[[data_module]]$data)]
-  } else if(modules[[data_module]]['version'] == 2) {
-    #2 byte unsigned integer (little endian)
-    modules[[data_module]]$data[6:(5+n_columns*2)]
-    column_types = rep_len(NA,n_columns)
-    for(i in 1:n_columns) {
-      column_types[[i]]=sum(2^.subset(0:15, as.logical(rawToBits(modules[[data_module]]$data[(4+i*2):(5+i*2)]))))
+  n_data_points <- sum(2 ^ .subset(0:31, as.logical(rawToBits(modules[[data_module]]$data[1:4]))))
+  n_columns <- sum(2 ^ .subset(0:7, as.logical(rawToBits(modules[[data_module]]$data[5]))))
+
+  if (!n_data_points > 0) {
+    jms.classes::log.error("Invalid number of data points found in mpr file: %s", n_data_points)
+    stop("Invalid number of data points found in mpr file", call.=F)
+  }
+  if (!n_columns > 0) {
+    jms.classes::log.error("Invalid number of data columns found in mpr file: %s", n_columns)
+    stop("Invalid number of data columns found in mpr file", call.=F)
+  }
+
+  jms.classes::log.debug("Data module version = %s", modules[[data_module]]["version"])
+
+  if (modules[[data_module]]["version"] == 0) {
+    # 1 byte unsigned integer
+    column_types <- as.integer(modules[[data_module]]$data[6:(5 + n_columns)])
+    remaining_headers <- modules[[data_module]]$data[(5 + n_columns):100]
+    main_data <- modules[[data_module]]$data[101:length(modules[[data_module]]$data)]
+  } else if (modules[[data_module]]["version"] == 2) {
+    # 2 byte unsigned integer (little endian)
+    column_types <- rep_len(NA, n_columns)
+    for (i in 1:n_columns) {
+      column_types[[i]] <- sum(2 ^ .subset(0:15, as.logical(rawToBits(modules[[data_module]]$data[(4 + i * 2):(5 + i * 2)]))))
     }
     ## There are 405 bytes of data before the main array starts
-    remaining_headers = modules[[data_module]]$data[(5 + 2 * n_columns):405]
-    main_data = modules[[data_module]]$data[406:length(modules[[data_module]]$data)]
-  } else{
-    stop(sprintf("Unrecognised version for data module: %s" ,modules[[data_module]]['version']),call.=F)
+    remaining_headers <- modules[[data_module]]$data[(5 + 2 * n_columns):405]
+    main_data <- modules[[data_module]]$data[406:length(modules[[data_module]]$data)]
+  } else {
+    stop(sprintf("Unrecognised version for data module: %s", modules[[data_module]]["version"]), call.=F)
   }
 
   # Have seen at least one instance where
-  if(!all(remaining_headers==0)) warning('Unknown headers were found in the mpr file, ignoring')
-
-  col_types = VMPdata_dtype_from_colIDs(column_types)
-
-  sizes=col_types$size[col_types$size>0]
-  if(any(col_types$flag)) {
-    #Flag information contained in a single byte integer at the start of every row
-    sizes=c(1,sizes)
+  if (!all(remaining_headers == 0)) {
+    jms.classes::log.debug("Unknown headers: %s", remaining_headers)
+    warning("Unknown headers were found in the mpr file, ignoring")
   }
 
-  if(!length(main_data)/n_data_points==sum(sizes))
-    stop(sprintf("mpr row size (%s) is different to expected (%s)",length(main_data)/n_data_points,col_types$row_size),call.=F)
+  col_types <- VMPdata_dtype_from_colIDs(column_types)
 
-  data=data.frame(matrix(NA, nrow = n_data_points, ncol = n_columns))
-  names(data)<-col_types$name
-
-  #Vectorised reding for each column in turn
-  columnised_data=split(main_data,rep(1:length(sizes), sizes))
-
-  which_column=1
-  if(any(col_types$flag)) {
-    columnised_data[[1]]=as.integer(columnised_data[[1]])
-    which_column=2
+  sizes <- col_types$size[col_types$size > 0]
+  if (any(col_types$flag)) {
+    # Flag information contained in a single byte integer at the start of every row
+    sizes <- c(1, sizes)
   }
-  for(i in 1:length(col_types$name)) {
-    if(col_types$flag[[i]]) {
-      if(col_types$type[[i]]=='logical') {
-        col_data=as.logical(bitwAnd(col_types$mask[[i]],columnised_data[[1]]))
-      } else if(col_types$type[[i]]=='integer') {
-        col_data=bitwAnd(col_types$mask[[i]],columnised_data[[1]])
+
+  if (!length(main_data) / n_data_points == sum(sizes)) {
+    jms.classes::log.error("mpr row size (%s / %s = %s) is different to expected (%s == %s)",
+                           length(main_data), n_data_points, length(main_data) / n_data_points,
+                           sum(sizes), col_types$row_size)
+    stop(
+      sprintf("mpr row size (%s) is different to expected (%s)",
+              length(main_data) / n_data_points, col_types$row_size),
+      call.=F
+    )
+  }
+
+  data <- data.frame(matrix(NA, nrow=n_data_points, ncol=n_columns))
+  names(data) <- col_types$name
+
+  # Vectorised reding for each column in turn
+  columnised_data <- split(main_data, rep(1:length(sizes), sizes))
+
+  which_column <- 1
+  if (any(col_types$flag)) {
+    columnised_data[[1]] <- as.integer(columnised_data[[1]])
+    which_column <- 2
+  }
+  for (i in 1:length(col_types$name)) {
+    if (col_types$flag[[i]]) {
+      if (col_types$type[[i]] == "logical") {
+        col_data <- as.logical(bitwAnd(col_types$mask[[i]], columnised_data[[1]]))
+      } else if (col_types$type[[i]] == "integer") {
+        col_data <- bitwAnd(col_types$mask[[i]], columnised_data[[1]])
       } else {
-        warning(sprintf("Unknown column type for flag in mpr file %s. Some data will not be imported.",col_types$type[[i]]),call.=FALSE)
+        jms.classes::log.warn("Unknown column type for flag in mpr file %s. Some data will not be imported.",
+                              col_types$type[[i]])
+        warning(sprintf("Unknown column type for flag in mpr file %s. Some data will not be imported.",
+                        col_types$type[[i]]), call.=FALSE)
       }
     } else {
-
-      if(col_types$type[[i]]=='integer') {
-        col_data=readBin(columnised_data[[which_column]], 'integer', n = n_data_points, size = col_types$size[[i]],endian = "little")
-      } else if(col_types$type[[i]]=='numeric') {
-        col_data=readBin(columnised_data[[which_column]], 'double', n = n_data_points, size = col_types$size[[i]],endian = "little")
+      if (col_types$type[[i]] == "integer") {
+        col_data <- readBin(columnised_data[[which_column]], "integer", n=n_data_points, size=col_types$size[[i]], endian="little")
+      } else if (col_types$type[[i]] == "numeric") {
+        col_data <- readBin(columnised_data[[which_column]], "double", n=n_data_points, size=col_types$size[[i]], endian="little")
       } else {
-        warning(sprintf("Unknown column type for data in mpr file %s. Some data will not be imported.",col_types$type[[i]]),call.=FALSE)
+        jms.classes::log.warn("Unknown column type for data in mpr file %s. Some data will not be imported.",
+                              col_types$type[[i]])
+        warning(sprintf("Unknown column type for data in mpr file %s. Some data will not be imported.",
+                        col_types$type[[i]]), call.=FALSE)
       }
-      which_column=which_column+1
+      which_column <- which_column + 1
     }
-    data[,col_types$name[[i]]]=col_data
+    data[,col_types$name[[i]]] <- col_data
   }
 
-  attr(data,'date')=as.Date(modules[[data_module]]$date,format='%m/%d/%y')
+  attr(data, "date") <- as.Date(modules[[data_module]]$date, format="%m/%d/%y")
   return(data)
 }
 
 read_VMP_modules <- function(fileobj, read_module_data=TRUE) {
-  mods=list()
-  magic=charToRaw('MODULEVMP ')
-  while(TRUE) {
-    module_magic = readBin(fileobj,what='raw',n=length(magic))
-    if(length(module_magic) == 0) {  # end of file
+  mods <- list()
+  magic <- charToRaw("MODULEVMP ")
+  while (TRUE) {
+    module_magic <- readBin(fileobj, what="raw", n=length(magic))
+    if (length(module_magic) == 0) {
+      # end of file
       return(mods)
-    } else if(!all(module_magic == magic)) {
-      stop('Unknown magic found in module within .mpr file',call.=F)
+    } else if (!all(module_magic == magic)) {
+      jms.classes::log.error("Found unknown magic in module: %s", module_magic)
+      stop("Unknown magic found in module within .mpr file", call.=F)
     }
-    hdr=list()
-    hdr$shortname=readChar(fileobj, 6, useBytes = T)
-    hdr$longname=readChar(fileobj, 25, useBytes = T)
-    hdr$length=readBin(fileobj, what='raw',n=4, endian='little')
-    hdr$length=sum(2^.subset(0:31, as.logical(rawToBits(hdr$length))))
-    hdr$version=readBin(fileobj, what='raw',n=4, endian='little')
-    hdr$version=sum(2^.subset(0:31, as.logical(rawToBits(hdr$version))))
-    hdr$date=readChar(fileobj, 8, useBytes = T)
-    hdr$offset = seek(fileobj,where=NA)
+    hdr <- list()
+    hdr$shortname <- readChar(fileobj, 6, useBytes=T)
+    hdr$longname <- readChar(fileobj, 25, useBytes=T)
+    hdr$length <- readBin(fileobj, what="raw", n=4, endian="little")
+    hdr$length <- sum(2 ^ .subset(0:31, as.logical(rawToBits(hdr$length))))
+    hdr$version <- readBin(fileobj, what="raw", n=4, endian="little")
+    hdr$version <- sum(2 ^ .subset(0:31, as.logical(rawToBits(hdr$version))))
+    hdr$date <- readChar(fileobj, 8, useBytes=T)
+    hdr$offset <- seek(fileobj, where=NA)
 
-    if(read_module_data){
-      hdr$data = readBin(fileobj,what='raw',n=hdr$length, endian='little')
-      if(length(hdr$data) != hdr$length)
+    if (read_module_data){
+      hdr$data <- readBin(fileobj, what="raw", n=hdr$length, endian="little")
+      if (length(hdr$data) != hdr$length)
         stop(sprintf("Unexpected end of file while reading data\ncurrent module: %s\nlength read: %s\nlength expected: %s",
                      hdr$longname,
                      length(hdr$data),
                      hdr$length),
              call.=F)
-      mods=append(mods,list(hdr))
+      mods <- append(mods, list(hdr))
     } else {
-      mods=append(mods,list(hdr))
-      seek(fileobj,where=hdr$offset+hdr$length)
+      mods <- append(mods, list(hdr))
+      seek(fileobj, where=hdr$offset + hdr$length)
     }
   }
 }
@@ -473,25 +536,6 @@ VMPdata_dtype_from_colIDs <- function(colIDs){
     stop(sprintf("mpr column type%s %s not implemented", s, missing), call.=F)
   }
 
-#' Get additional attributes from a biologic mpt file
-#'
-#' This function finds the date and channel for a biologic dataset
-#'
-#' @param header_lines The header of a biologic mpt file
-#' @return A list of attributes that were found
-#' @keywords internal
-.get_biologic_attributes <- function(header_text) {
-  atts=list()
-  try({
-    date_line=suppressWarnings(grep('Acquisition started on',header_text))
-    if(length(date_line))
-      atts$date=as.Date(substr(header_text[[date_line]],26,44),format="%m/%d/%Y %T")
-
-    channel_line=suppressWarnings(grep('Run on channel',header_text))
-    if(length(channel_line))
-      atts$channel=substr(header_text[[channel_line]],18,30)
-  },silent=TRUE)
-  atts
   col_types <- VMP_colID_map[colIDs,]
   # Columns --> list of vectors maintaining mode
   col_types <- lapply(split(col_types, col(col_types)), unlist, F, F)
