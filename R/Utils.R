@@ -97,7 +97,7 @@ load.addMissingColumns <- function(data) {
 #' @param ... The changes to apply
 #' @return A vector with the changes applied
 #' @examples
-#' vswitch(input, changes ...)
+#' vswitch(input, changes1, change2, ...)
 #' @keywords internal
 vswitch <- function(EXPR, ...) {
   vars <- cbind(...)

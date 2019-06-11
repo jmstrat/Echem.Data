@@ -18,6 +18,6 @@ A vector with the changes applied
 This function is used internally to ease the importing of biologic data from different versions of ec-lab.
 }
 \examples{
-vswitch(input, changes ...)
+vswitch(input, changes1, change2, ...)
 }
 \keyword{internal}
