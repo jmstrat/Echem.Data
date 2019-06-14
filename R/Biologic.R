@@ -208,6 +208,7 @@ load.biologic <- function(file) {
 #' load.biologic.mpt("/path/to/file.mpt")
 #' @keywords internal
 load.biologic.mpt <- function(file) {
+  jms.classes::log.debug("Reading biologic text file (.mpt)")
   file_header <- readLines(file, n=2)
   if (file_header[[1]] != 'EC-Lab ASCII FILE') {
     # e.g. If "Save Headline" is not selected
@@ -224,10 +225,16 @@ load.biologic.mpt <- function(file) {
 
   header_text <- readLines(file, n=skip + 1)
   atts <- .get_biologic_attributes(header_text)
-  header <- read.table(sep="\t", header=T, text=header_text[c(skip, skip + 1)], stringsAsFactors=FALSE)
+  header <- read.table(sep="\t", header=T, text=header_text[skip], stringsAsFactors=FALSE)
   data <- read.table(file, sep="\t", skip=skip, header=FALSE, na.strings="XXX", stringsAsFactors=FALSE)
 
-  names(data) <- names(header)
+  header <- names(header)
+  if (length(header) == ncol(data) + 1) {
+    # Recent ec-lab versions seem to add an extra \t at the end of the header
+    header <- header[-length(header)]
+  }
+
+  names(data) <- header
 
   # Convert flags to logical
   data$ox.red <- as.logical(data$ox.red)
