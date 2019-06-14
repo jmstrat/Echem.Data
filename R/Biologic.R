@@ -56,7 +56,8 @@ load.biologic <- function(file) {
                        control.V="control_v",
                        control.mA="control_ma",
                        cycle.number="Cycle_Index",
-                       x="x")
+                       x="x",
+                       I.Range="current_range")
     if(is.na(newname)) {
       jms.classes::log.warn("Unmapped column type: %s", n)
       warning("Unmapped column type: ", n)
