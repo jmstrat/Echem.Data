@@ -81,7 +81,7 @@ load.biologic <- function(file) {
     data$Step_Index <- data$Step_Index + 1
   }
   if ("Cycle_Index" %in% names(data)) {
-    data$Cycle_Index <- data$Cycle_Index + 1
+    data$Biologic_Cycle_Index <- data$Cycle_Index
   }
   if ("Current.A." %in% names(data)) {
     data$Current.A. <- data$Current.A. / 1000
@@ -130,21 +130,26 @@ load.biologic <- function(file) {
     }
   }
 
-  if (!"Cycle_Index" %in% names(data)) {
-    if ("counter_inc" %in% names(data)) {
-      jms.classes::log.debug("Cycle index not present in raw data, calculating from counter_inc")
-      changes <- c(0, which(abs(diff(data$counter_inc)) == 1), nrow(data)) + 1
-      cycles <- c()
-      ci <- 1
-      for (i in 1:(length(changes) - 1)) {
-        cycles <- append(cycles, rep.int(ci, changes[[i + 1]] - changes[[i]]))
-        ci <- ci + 1
-      }
-      data$Cycle_Index <- cycles
-    } else {
-      jms.classes::log.warn("Cycle index not present in raw data, unable to calculate from other available data.")
-      warning("Unable to determine cycle index for biologic data", call.=F)
+
+  # Biologic seem to class a new cycle as beginning only during charging
+  # Whereas it seems more logical (and consistent with other cyclers)
+  # that a new cycle begins whenever the loop counter increments
+  if ("counter_inc" %in% names(data)) {
+    jms.classes::log.debug("Cycle index not present in raw data, calculating from counter_inc")
+    changes <- c(0, which(abs(diff(data$counter_inc)) == 1), nrow(data)) + 1
+    cycles <- c()
+    ci <- 1
+    for (i in 1:(length(changes) - 1)) {
+      cycles <- append(cycles, rep.int(ci, changes[[i + 1]] - changes[[i]]))
+      ci <- ci + 1
     }
+    data$Cycle_Index <- cycles
+  } else if ("Biologic_Cycle_Index" %in% names(data)) {
+    # Cycle_Index is already equal to Biologic_Cycle_Index, so we leave it like that
+    warning("Unable to normalise cycle index for biologic data", call.=F)
+  } else {
+    jms.classes::log.warn("Cycle index not present in raw data, unable to calculate from other available data.")
+    warning("Unable to determine cycle index for biologic data", call.=F)
   }
 
   if (!"dq_mah" %in% names(data)) {
