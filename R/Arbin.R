@@ -60,6 +60,19 @@ load.arbin <- function(file) {
       atts <- .get_arbin_attributes(file)
       dat <- as.data.frame(dat)
 
+      # Arbin data defines capacity differently to other cyclers, in that it is cumulative with
+      # discharge adding to the value and charge subtracting.
+      # We store that seperately, the "normal" definition will then be calculated by load.addMissingColumns
+      dc_col <- match("Discharge_Capacity.Ah.", names(dat))
+      if (!is.na(dc_col)) {
+        names(dat)[[dc_col]] <- "Arbin_Discharge_Capacity.Ah."
+      }
+
+      c_col <- match("Charge_Capacity.Ah.", names(dat))
+      if (!is.na(c_col)) {
+        names(dat)[[c_col]] <- "Arbin_Charge_Capacity.Ah."
+      }
+
       dat <- load.addMissingColumns(dat)
 
       for (n in names(atts)) {
