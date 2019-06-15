@@ -84,7 +84,7 @@ load.arbin <- function(file) {
   jms.classes::log.debug("Getting additional attributes from arbin data file")
   atts <- list()
   try({
-    info <- .xldata(file, "Info")
+    info <- .xldata(file, "Info", .name_repair="minimal")
     index <- which(info == "Start_DateTime", arr.ind=TRUE)
     #This will give the wrong answer for dates between 1/1/1900 and 1/3/1900 :)
     atts$date <- as.Date("1899-12-30") + as.numeric(info[index[1, "row"] + 1, index[1, "col"]])

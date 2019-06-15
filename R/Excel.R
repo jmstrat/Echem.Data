@@ -1,6 +1,6 @@
 #Get sheet names (if it fails then force xlsx) (supress prints)
 .xlsheets <- function(file) {
-  log <- capture.output({
+  capture.output({
     res <- tryCatch({
         readxl::excel_sheets(file)
       }, error=function(e) {
@@ -14,9 +14,9 @@
 }
 
 #Read (if it fails then force xlsx) (supress prints)
-.xldata <- function(file, sheet) {
-  log <- capture.output({
-    res <- tryCatch(readxl::read_excel(file, sheet), error=function(e) readxl::read_xlsx(file, sheet))
+.xldata <- function(file, sheet, ...) {
+  capture.output({
+    res <- tryCatch(readxl::read_excel(file, sheet, ...), error=function(e) readxl::read_xlsx(file, sheet, ...))
   })
   return(res)
 }
