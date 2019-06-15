@@ -9,6 +9,7 @@
 load.arbin <- function(file) {
   # Get sheet names
   sn <- .xlsheets(file)
+  jms.classes::log.debug("Found [%s] worksheets in arbin excel file", paste0(sn, collapse=', '))
   if (is.null(sn)) {
     return (NULL)
   }
@@ -22,11 +23,14 @@ load.arbin <- function(file) {
     return (NULL)
   }
 
+  jms.classes::log.debug("Worksheet(s) [%s] appear to contain data", paste0(snums, collapse=', '))
+
   tryCatch({
       # Read sheets one by one
       for (i in 1:length(snums)) {
         s <- snums[[i]]
         # Read
+        jms.classes::log.debug("Reading data from worksheet [%s]", s)
         ws <- tryCatch(.xldata(file, s), error = function (e) {
           jms.classes::log.debug("Got error %s, trying workaround.", e)
           ### WARNING: THE FOLLOWING IS A WORKAROUND FOR A BUG IN readxl ###
@@ -34,7 +38,9 @@ load.arbin <- function(file) {
 
           chart_sheet <- grep("^Channel_Chart", sn)
           snums[snums > chart_sheet] <- snums[snums > chart_sheet] - 1
+          jms.classes::log.debug("Adjusted data worksheet number(s) to [%s]", paste0(snums, collapse=', '))
           s <- snums[[i]]
+          jms.classes::log.debug("Reading data from worksheet [%s]", s)
           .xldata(file, s)
 
           ### END WORKAROUND ###
@@ -47,6 +53,7 @@ load.arbin <- function(file) {
           dat <- rbind(dat, ws)
         }
       }
+
       n <- names(dat)
       n <- gsub("[()]", ".", n)
       names(dat) <- n
@@ -74,6 +81,7 @@ load.arbin <- function(file) {
 #' @return A list of attributes that were found
 #' @keywords internal
 .get_arbin_attributes <- function(file) {
+  jms.classes::log.debug("Getting additional attributes from arbin data file")
   atts <- list()
   try({
     info <- .xldata(file, "Info")
