@@ -52,6 +52,9 @@ load.arbin <- function(file) {
       names(dat) <- n
       atts <- .get_arbin_attributes(file)
       dat <- as.data.frame(dat)
+
+      dat <- load.addMissingColumns(dat)
+
       for (n in names(atts)) {
         attr(dat, n) <- atts[n][[1]]
       }
