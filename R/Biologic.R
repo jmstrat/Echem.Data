@@ -231,14 +231,12 @@ load.biologic.mpt <- function(file) {
 
   header_text <- readLines(file, n=skip + 1)
   atts <- .get_biologic_attributes(header_text)
-  header <- read.table(sep="\t", header=T, text=header_text[skip], stringsAsFactors=FALSE)
+  header <- scan(what=character(), sep="\t", text=header_text[skip], nlines=1, na.strings='', quiet=TRUE)
   data <- read.table(file, sep="\t", skip=skip, header=FALSE, na.strings="XXX", stringsAsFactors=FALSE)
 
-  header <- names(header)
-  if (length(header) == ncol(data) + 1) {
-    # Recent ec-lab versions seem to add an extra \t at the end of the header
-    header <- header[-length(header)]
-  }
+  # Recent ec-lab versions seem to add an extra \t at the end of the header. This gives an NA value (missing name)
+  # We drop such names as there are no corresponding data
+  header <- make.names(header[!is.na(header)], unique=TRUE)
 
   names(data) <- header
 
