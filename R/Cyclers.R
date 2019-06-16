@@ -58,10 +58,14 @@ guess_cycler <- function(file) {
     }
     # Find sheet(s) containing data
     arbin_sheets <- grepl("^Channel_[[:digit:]]", sn)
-    if (any(arbin_sheets)) return("arbin")
+    if (any(arbin_sheets)) {
+      return("arbin")
+    }
 
     land_sheets <- grepl("^Record", sn)
-    if (any(land_sheets)) return("land")
+    if (any(land_sheets)) {
+      return("land")
+    }
 
     jms.classes::log.error("Unable to map sheet names to a cycler type")
     return(NA)
@@ -76,10 +80,11 @@ guess_cycler <- function(file) {
     # Could be land or ivium, so read the 1st line
     header_text <- readLines(file, n=1)
     header <- read.table(sep="\t", header=T, text=header_text, quote="")
-    if (identical(names(header), c("time..s", "I..mA", "E..V")))
+    if (identical(names(header), c("time..s", "I..mA", "E..V"))) {
       return("ivium")
-    else if (names(header)[[1]] == "Today.s.Date.")
       return("Today.s.Date.")
+    } else if (names(header)[[1]] == "Today.s.Date.") {
+    }
     return("land")
   }
   jms.classes::log.error('Could not determine cycler type for "%s"', file)
@@ -92,7 +97,9 @@ guess_cycler <- function(file) {
 #' @return The normalised string
 #' @export
 cycler_normalise <- function(cycler_type) {
-  if (is.na(cycler_type) || length(cycler_type) == 0) return(NA)
+  if (is.na(cycler_type) || length(cycler_type) == 0) {
+    return(NA)
+  }
   cycler_type <- tolower(cycler_type)
   cycler_type <- gsub("[[:space:]]", "", cycler_type)
   cycler_types <- names(cycler_types())
