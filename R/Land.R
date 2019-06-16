@@ -21,8 +21,6 @@ load.land <- function(file) {
   data$Capacity.Ah. <- data$Capacity.Ah. / 1000
   data$Energy.Wh. <- data$Energy.Wh. / 1000
 
-  data <- load.addMissingColumns(data)
-
   return(data)
 }
 

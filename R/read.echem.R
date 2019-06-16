@@ -39,6 +39,7 @@ read.echem <- function(path, ...) {
   jms.classes::log.info('Treating "%s" as a %s file', echem_file, cycler_type)
 
   echem <- loader_for_cycler(cycler_type, echem_file)
+  echem <- load.addMissingColumns(echem)
 
   if (all(is.null(echem))) return(NA)
 

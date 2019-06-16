@@ -49,13 +49,19 @@ load.biologic <- function(file) {
                        dQ.mA.h="dQ_mah",
                        Q.discharge.mA.h="Discharge_Capacity.Ah.",
                        Q.charge.mA.h="Charge_Capacity.Ah.",
-                       Capacity.mA.h="capacity.mah",
+                       Capacity.mA.h="Capacity.Ah.",
                        Efficiency..="efficiency.percent",
                        Energy.charge.W.h="Charge_Energy.Wh.",
                        Energy.discharge.W.h="Discharge_Energy.Wh.",
                        control.V="control_v",
                        control.mA="control_ma",
-                       cycle.number="Cycle_Index",
+
+                       # Biologic seem to class a new cycle as beginning only during charging
+                       # Whereas it seems more logical (and consistent with other cyclers)
+                       # that a new cycle begins whenever the loop counter increments.
+                       # So we store its cycle index separately and calculate the "normal"
+                       # Cycle_Index later
+                       cycle.number="Biologic_Cycle_Index",
                        x="x",
                        I.Range="current_range")
     if(is.na(newname)) {
@@ -80,12 +86,15 @@ load.biologic <- function(file) {
   if ("Step_Index" %in% names(data)) {
     data$Step_Index <- data$Step_Index + 1
   }
-  if ("Cycle_Index" %in% names(data)) {
-    data$Biologic_Cycle_Index <- data$Cycle_Index
-  }
+
   if ("Current.A." %in% names(data)) {
     data$Current.A. <- data$Current.A. / 1000
   }
+
+  if ("Capacity.Ah." %in% names(data)) {
+    data$Capacity.Ah. <- data$Capacity.Ah. / 1000
+  }
+
   if ("Discharge_Capacity.Ah." %in% names(data)) {
     data$Discharge_Capacity.Ah. <- abs(data$Discharge_Capacity.Ah.) / 1000
   }
@@ -93,112 +102,7 @@ load.biologic <- function(file) {
     data$Charge_Capacity.Ah. <- abs(data$Charge_Capacity.Ah.) / 1000
   }
 
-  # Add missing columns
-
-  if (!"Current.A." %in% names(data)) {
-    if ("p_w" %in% names(data)) {
-      jms.classes::log.debug("Current not present in raw data, calculating from power and voltage")
-      data$Current.A. <- data$p_w / data$Voltage.V.
-      if ("dq_mah" %in% names(data)) {
-        data$Current.A. <- data$Current.A. * sign(data$dq_mah)
-      } else if ("q_charge_discharge_mah" %in% names(data)) {
-        data$Current.A. <- data$Current.A. * sign(data$q_charge_discharge_mah)
-      } else if ("ox_red" %in% names(data)) {
-        # ox_red is not simply the sign of the current unfortunately...
-        # It seems to be the sign of the control
-        # (i.e. normally the current, but could be the sign of the held potential e.g. during a voltage hold)
-        # (Possibly...)
-
-        # That being said, if all else fails it should be a reasonable guess...
-        data$Current.A.[!data$ox_red] <- data$Current.A.[!data$ox_red] * -1
-        warning("Assuming biologic data is exclusively under current control", call.=F)
-      } else {
-        warning("Unable to determine sign of current for biologic data", call.=F)
-      }
-    } else if (all(c("dq_mah", "Test_Time.s.") %in% names(data))) {
-      jms.classes::log.debug("Current not present in raw data, calculating from capacity and time")
-      data$Current.A. <- data$dq_mah * 3.6 / c(1, diff(data$Test_Time.s.))
-      data$Current.A.[[1]] <- 0
-    } else if ("control_v_ma" %in% names(data)) {
-      jms.classes::log.debug("Current not present in raw data, calculating from control")
-      jms.classes::log.warn("Assuming current control")
-      warning("Unable to determine current for biologic data, assuming current control and using control data as the current", call.=FALSE)
-      data$Current.A. <- data$control_v_ma / 1000
-    } else {
-      jms.classes::log.warn("Current not present in raw data, unable to calculate from other available data.")
-      warning("Unable to determine current for biologic data", call.=F)
-    }
-  }
-
-
-  # Biologic seem to class a new cycle as beginning only during charging
-  # Whereas it seems more logical (and consistent with other cyclers)
-  # that a new cycle begins whenever the loop counter increments
-  if ("counter_inc" %in% names(data)) {
-    jms.classes::log.debug("Cycle index not present in raw data, calculating from counter_inc")
-    changes <- c(0, which(abs(diff(data$counter_inc)) == 1), nrow(data)) + 1
-    cycles <- c()
-    ci <- 1
-    for (i in 1:(length(changes) - 1)) {
-      cycles <- append(cycles, rep.int(ci, changes[[i + 1]] - changes[[i]]))
-      ci <- ci + 1
-    }
-    data$Cycle_Index <- cycles
-  } else if ("Biologic_Cycle_Index" %in% names(data)) {
-    # Cycle_Index is already equal to Biologic_Cycle_Index, so we leave it like that
-    warning("Unable to normalise cycle index for biologic data", call.=F)
-  } else {
-    jms.classes::log.warn("Cycle index not present in raw data, unable to calculate from other available data.")
-    warning("Unable to determine cycle index for biologic data", call.=F)
-  }
-
-  if (!"dq_mah" %in% names(data)) {
-    if ("q_charge_discharge_mah" %in% names(data)) {
-      jms.classes::log.debug("dq_mah not present in raw data, calculating from q_charge_discharge_mah")
-      data$dq_mah <- c(0, diff(data$q_charge_discharge_mah))
-    } else if ("capacity.mah" %in% names(data)) {
-      jms.classes::log.debug("dq_mah not present in raw data, calculating from capacity.mah")
-      data$dq_mah <- c(0, diff(data$capacity.mah))
-    }
-  }
-
-  if (!"capacity.mah" %in% names(data)) {
-    if (all(c("dq_mah", "Ns_changes") %in% names(data))) {
-      jms.classes::log.debug("capacity.mah not present in raw data, calculating from dq_mah and Ns_changes")
-      changes <- c(0, which(abs(diff(data$Ns_changes)) == 1), nrow(data))
-      capacity <- c()
-      for (i in 1:(length(changes) - 1)) {
-        capacity <- append(capacity, abs(cumsum(data$dq_mah[(changes[[i]] + 1):changes[[i + 1]]])))
-      }
-      data$capacity.mah <- capacity
-    }
-  }
-  # Use the sign of the current obtained earlier rather than ox_red to separate (dis)charge capacities
-  if ("Current.A." %in% names(data)) {
-    s <- sign(data$Current.A.)
-    if (!"Discharge_Capacity.Ah." %in% names(data)) {
-      if ("capacity.mah" %in% names(data)) {
-        jms.classes::log.debug("Discharge capacity not present in raw data, calculating from capacity.mah and Current.A.")
-        data$Discharge_Capacity.Ah. <- rep_len(0, nrow(data))
-        data$Discharge_Capacity.Ah.[s == -1] <- data$capacity.mah[s == -1] / 1000
-      } else {
-        jms.classes::log.warn("Discharge capacity not present in raw data, unable to calculate from other available data.")
-        warning("Unable to determine discharge capacity for biologic data", call.=F)
-      }
-    }
-    if (!"Charge_Capacity.Ah." %in% names(data)) {
-      if ("capacity.mah" %in% names(data)) {
-        jms.classes::log.debug("Charge capacity not present in raw data, calculating from capacity.mah and Current.A.")
-        data$Charge_Capacity.Ah. <- rep_len(0, nrow(data))
-        data$Charge_Capacity.Ah.[s == 1] <- data$capacity.mah[s == 1] / 1000
-      } else {
-        jms.classes::log.warn("Charge capacity not present in raw data, unable to calculate from other available data.")
-        warning("Unable to determine charge capacity for biologic data", call.=F)
-      }
-    }
-  }
-
-  return (data)
+  data
 }
 
 #===========#

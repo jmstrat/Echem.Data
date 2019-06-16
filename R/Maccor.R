@@ -94,9 +94,6 @@ load.maccor <- function(file) {
   if ("MD" %in% names(data))
     data <- data[data$MD != "S", ]  # Not sure what s means, but the few rows with this flag don't seem to contain data
 
-  # Normalise
-  data <- load.addMissingColumns(data)
-
   # Add attributes
   try({
     header_text <- readLines(file, n=3)

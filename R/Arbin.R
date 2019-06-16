@@ -73,8 +73,6 @@ load.arbin <- function(file) {
         names(dat)[[c_col]] <- "Arbin_Charge_Capacity.Ah."
       }
 
-      dat <- load.addMissingColumns(dat)
-
       for (n in names(atts)) {
         attr(dat, n) <- atts[n][[1]]
       }
