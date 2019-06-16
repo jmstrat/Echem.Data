@@ -82,8 +82,8 @@ guess_cycler <- function(file) {
     header <- read.table(sep="\t", header=T, text=header_text, quote="")
     if (identical(names(header), c("time..s", "I..mA", "E..V"))) {
       return("ivium")
-      return("Today.s.Date.")
     } else if (names(header)[[1]] == "Today.s.Date.") {
+      return("maccor")
     }
     return("land")
   }
