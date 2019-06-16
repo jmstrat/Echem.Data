@@ -25,46 +25,48 @@ load.biologic <- function(file) {
   cnames <- names(data)
   for (i in 1:length(cnames)) {
     n <- cnames[[i]]
+    #### Column Name Map ####
     newname <- vswitch(n,
-                       mode="mode",
-                       ox.red="ox_red",
-                       error="error",
-                       control.changes="Control_changes",
-                       Ns.changes="Ns_changes",
-                       counter.inc.="counter_inc",
-                       Ns="Step_Index",
-                       # If time is a date, we also add "Date_Time"
-                       time.s="Test_Time.s.",
-                       control.V.mA="control_v_ma",
-                       Ewe.V="Voltage.V.",
-                       X.Q.Qo..mA.h="q-q0_mah",
-                       Analog.IN.1.V="analog_in_1_v",
-                       P.W="p_w",
-                       Q.charge.discharge.mA.h="q_charge_discharge_mah",
-                       half.cycle="half_cycle",
-                       Capacitance.charge..b5.F="capacitance_charge_uf",
-                       Capacitance.discharge..b5.F="capacitance_discharge_uf",
-                       X.I..mA="Current.A.",
-                       dq.mA.h="dq_mah",
-                       dQ.mA.h="dQ_mah",
-                       Q.discharge.mA.h="Discharge_Capacity.Ah.",
-                       Q.charge.mA.h="Charge_Capacity.Ah.",
-                       Capacity.mA.h="Capacity.Ah.",
-                       Efficiency..="efficiency.percent",
-                       Energy.charge.W.h="Charge_Energy.Wh.",
-                       Energy.discharge.W.h="Discharge_Energy.Wh.",
-                       control.V="control_v",
-                       control.mA="control_ma",
+      mode="mode",
+      ox.red="ox_red",
+      error="error",
+      control.changes="Control_changes",
+      Ns.changes="Ns_changes",
+      counter.inc.="counter_inc",
+      Ns="Step_Index",
+      # If time is a date, we also add "Date_Time"
+      time.s="Test_Time.s.",
+      control.V.mA="control_v_ma",
+      Ewe.V="Voltage.V.",
+      X.Q.Qo..mA.h="q-q0_mah",
+      Analog.IN.1.V="analog_in_1_v",
+      P.W="p_w",
+      Q.charge.discharge.mA.h="q_charge_discharge_mah",
+      half.cycle="half_cycle",
+      Capacitance.charge..b5.F="capacitance_charge_uf",
+      Capacitance.discharge..b5.F="capacitance_discharge_uf",
+      X.I..mA="Current.A.",
+      dq.mA.h="dq_mah",
+      dQ.mA.h="dQ_mah",
+      Q.discharge.mA.h="Discharge_Capacity.Ah.",
+      Q.charge.mA.h="Charge_Capacity.Ah.",
+      Capacity.mA.h="Capacity.Ah.",
+      Efficiency..="efficiency.percent",
+      Energy.charge.W.h="Charge_Energy.Wh.",
+      Energy.discharge.W.h="Discharge_Energy.Wh.",
+      control.V="control_v",
+      control.mA="control_ma",
 
-                       # Biologic seem to class a new cycle as beginning only during charging
-                       # Whereas it seems more logical (and consistent with other cyclers)
-                       # that a new cycle begins whenever the loop counter increments.
-                       # So we store its cycle index separately and calculate the "normal"
-                       # Cycle_Index later
-                       cycle.number="Biologic_Cycle_Index",
-                       x="x",
-                       I.Range="current_range")
-    if(is.na(newname)) {
+      # Biologic seem to class a new cycle as beginning only during charging
+      # Whereas it seems more logical (and consistent with other cyclers)
+      # that a new cycle begins whenever the loop counter increments.
+      # So we store its cycle index separately and calculate the "normal"
+      # Cycle_Index later
+      cycle.number="Biologic_Cycle_Index",
+      x="x",
+      I.Range="current_range"
+    )
+    if (is.na(newname)) {
       jms.classes::log.warn("Unmapped column type: %s", n)
       warning("Unmapped column type: ", n)
     } else {
@@ -73,11 +75,11 @@ load.biologic <- function(file) {
   }
 
   # Adjust units etc.
-  if("Test_Time.s." %in% names(data)) {
-    if(is.character(data$Test_Time.s.)) {
+  if ("Test_Time.s." %in% names(data)) {
+    if (is.character(data$Test_Time.s.)) {
       # Absolute time can be specified in the mpt export format options
       jms.classes::log.debug("Converting absolute times to relative times")
-      date_time = strptime(data$Test_Time.s., format="%m/%d/%y %H:%M:%OS")
+      date_time <- strptime(data$Test_Time.s., format="%m/%d/%y %H:%M:%OS")
       data$Date_Time <- date_time
       data$Test_Time.s. <- as.numeric(date_time - date_time[1])
     }
@@ -105,9 +107,9 @@ load.biologic <- function(file) {
   data
 }
 
-#===========#
+# ========= #
 #### MPT ####
-#===========#
+# ========= #
 
 #' Read Echem Data for Biologic Cycler
 #'
@@ -120,10 +122,10 @@ load.biologic <- function(file) {
 load.biologic.mpt <- function(file) {
   jms.classes::log.debug("Reading biologic text file (.mpt)")
   file_header <- readLines(file, n=2)
-  if (file_header[[1]] != 'EC-Lab ASCII FILE') {
+  if (file_header[[1]] != "EC-Lab ASCII FILE") {
     # e.g. If "Save Headline" is not selected
-    jms.classes::log.warn('.mpt file does not appear to have a header')
-    warning('No header found for .mpt file')
+    jms.classes::log.warn(".mpt file does not appear to have a header")
+    warning("No header found for .mpt file")
 
     # We assume the file just contains the data table, with the column headings
     # as the first row
@@ -135,7 +137,7 @@ load.biologic.mpt <- function(file) {
 
   header_text <- readLines(file, n=skip + 1)
   atts <- .get_biologic_attributes(header_text)
-  header <- scan(what=character(), sep="\t", text=header_text[skip], nlines=1, na.strings='', quiet=TRUE)
+  header <- scan(what=character(), sep="\t", text=header_text[skip], nlines=1, na.strings="", quiet=TRUE)
   data <- read.table(file, sep="\t", skip=skip, header=FALSE, na.strings="XXX", stringsAsFactors=FALSE)
 
   # Recent ec-lab versions seem to add an extra \t at the end of the header. This gives an NA value (missing name)
@@ -170,20 +172,22 @@ load.biologic.mpt <- function(file) {
   atts <- list()
   try({
     date_line <- suppressWarnings(grep("Acquisition started on", header_text))
-    if (length(date_line))
+    if (length(date_line)) {
       atts$date <- as.Date(substr(header_text[[date_line]], 26, 44), format="%m/%d/%Y %T")
+    }
 
     channel_line <- suppressWarnings(grep("Run on channel", header_text))
-    if (length(channel_line))
-      atts$channel<- substr(header_text[[channel_line]], 18, 30)
+    if (length(channel_line)) {
+      atts$channel <- substr(header_text[[channel_line]], 18, 30)
+    }
   }, silent=TRUE)
   atts
 }
 
 
-#===========#
+# ========= #
 #### MPR ####
-#===========#
+# ========= #
 
 
 #' Read Echem Data for Biologic Cycler
@@ -200,8 +204,9 @@ load.biologic.mpr <- function(mprfile) {
   mpr_file <- file(mprfile, "rb")
   mpr_magic <- c(charToRaw("BIO-LOGIC MODULAR FILE\x1a                         "), rep_len(as.raw(0), 4))
   magic <- readBin(mpr_file, what="raw", n=length(mpr_magic))
-  if (!all(magic == mpr_magic))
+  if (!all(magic == mpr_magic)) {
     stop("Unknown magic found in .mpr file", call.=F)
+  }
 
   modules <- read_VMP_modules(mpr_file)
   jms.classes::log.debug("Found %s modules", length(modules))
@@ -209,24 +214,27 @@ load.biologic.mpr <- function(mprfile) {
 
   settings_mod <- data_module <- maybe_log_module <- NULL
   for (m in 1:length(modules)) {
-    if (modules[[m]]["shortname"] == "Set   ")
-      settings_mod <- m # IGNORED
-    if (modules[[m]]["shortname"] == "data  ")
+    if (modules[[m]]["shortname"] == "Set   ") {
+      settings_mod <- m
+    } # IGNORED
+    if (modules[[m]]["shortname"] == "data  ") {
       data_module <- m
-    if (modules[[m]]["shortname"] == "LOG   ")
-      maybe_log_module <- m # IGNORED
+    }
+    if (modules[[m]]["shortname"] == "LOG   ") {
+      maybe_log_module <- m
+    } # IGNORED
     # We also have External Device module (for e.g. temperature probes) -- data format currently unknown
   }
 
-  if(is.null(data_module)) {
+  if (is.null(data_module)) {
     available_modules <- sapply(modules, function(x) x[["shortname"]])
-    available_modules <- paste0(available_modules, collapse=', ')
+    available_modules <- paste0(available_modules, collapse=", ")
     jms.classes::log.error("Data module not found, available modules:\n%s", available_modules)
     stop("Data module not found", call.=F)
   }
 
-  n_data_points <- sum(2 ^ .subset(0:31, as.logical(rawToBits(modules[[data_module]]$data[1:4]))))
-  n_columns <- sum(2 ^ .subset(0:7, as.logical(rawToBits(modules[[data_module]]$data[5]))))
+  n_data_points <- sum(2^.subset(0:31, as.logical(rawToBits(modules[[data_module]]$data[1:4]))))
+  n_columns <- sum(2^.subset(0:7, as.logical(rawToBits(modules[[data_module]]$data[5]))))
 
   if (!n_data_points > 0) {
     jms.classes::log.error("Invalid number of data points found in mpr file: %s", n_data_points)
@@ -248,7 +256,7 @@ load.biologic.mpr <- function(mprfile) {
     # 2 byte unsigned integer (little endian)
     column_types <- rep_len(NA, n_columns)
     for (i in 1:n_columns) {
-      column_types[[i]] <- sum(2 ^ .subset(0:15, as.logical(rawToBits(modules[[data_module]]$data[(4 + i * 2):(5 + i * 2)]))))
+      column_types[[i]] <- sum(2^.subset(0:15, as.logical(rawToBits(modules[[data_module]]$data[(4 + i * 2):(5 + i * 2)]))))
     }
     ## There are 405 bytes of data before the main array starts
     remaining_headers <- modules[[data_module]]$data[(5 + 2 * n_columns):405]
@@ -272,12 +280,16 @@ load.biologic.mpr <- function(mprfile) {
   }
 
   if (!length(main_data) / n_data_points == sum(sizes)) {
-    jms.classes::log.error("mpr row size (%s / %s = %s) is different to expected (%s == %s)",
-                           length(main_data), n_data_points, length(main_data) / n_data_points,
-                           sum(sizes), col_types$row_size)
+    jms.classes::log.error(
+      "mpr row size (%s / %s = %s) is different to expected (%s == %s)",
+      length(main_data), n_data_points, length(main_data) / n_data_points,
+      sum(sizes), col_types$row_size
+    )
     stop(
-      sprintf("mpr row size (%s) is different to expected (%s)",
-              length(main_data) / n_data_points, col_types$row_size),
+      sprintf(
+        "mpr row size (%s) is different to expected (%s)",
+        length(main_data) / n_data_points, col_types$row_size
+      ),
       call.=F
     )
   }
@@ -300,10 +312,14 @@ load.biologic.mpr <- function(mprfile) {
       } else if (col_types$type[[i]] == "integer") {
         col_data <- bitwAnd(col_types$mask[[i]], columnised_data[[1]])
       } else {
-        jms.classes::log.warn("Unknown column type for flag in mpr file %s. Some data will not be imported.",
-                              col_types$type[[i]])
-        warning(sprintf("Unknown column type for flag in mpr file %s. Some data will not be imported.",
-                        col_types$type[[i]]), call.=FALSE)
+        jms.classes::log.warn(
+          "Unknown column type for flag in mpr file %s. Some data will not be imported.",
+          col_types$type[[i]]
+        )
+        warning(sprintf(
+          "Unknown column type for flag in mpr file %s. Some data will not be imported.",
+          col_types$type[[i]]
+        ), call.=FALSE)
       }
     } else {
       if (col_types$type[[i]] == "integer") {
@@ -311,14 +327,18 @@ load.biologic.mpr <- function(mprfile) {
       } else if (col_types$type[[i]] == "numeric") {
         col_data <- readBin(columnised_data[[which_column]], "double", n=n_data_points, size=col_types$size[[i]], endian="little")
       } else {
-        jms.classes::log.warn("Unknown column type for data in mpr file %s. Some data will not be imported.",
-                              col_types$type[[i]])
-        warning(sprintf("Unknown column type for data in mpr file %s. Some data will not be imported.",
-                        col_types$type[[i]]), call.=FALSE)
+        jms.classes::log.warn(
+          "Unknown column type for data in mpr file %s. Some data will not be imported.",
+          col_types$type[[i]]
+        )
+        warning(sprintf(
+          "Unknown column type for data in mpr file %s. Some data will not be imported.",
+          col_types$type[[i]]
+        ), call.=FALSE)
       }
       which_column <- which_column + 1
     }
-    data[,col_types$name[[i]]] <- col_data
+    data[, col_types$name[[i]]] <- col_data
   }
 
   attr(data, "date") <- as.Date(modules[[data_module]]$date, format="%m/%d/%y")
@@ -341,20 +361,24 @@ read_VMP_modules <- function(fileobj, read_module_data=TRUE) {
     hdr$shortname <- readChar(fileobj, 6, useBytes=T)
     hdr$longname <- readChar(fileobj, 25, useBytes=T)
     hdr$length <- readBin(fileobj, what="raw", n=4, endian="little")
-    hdr$length <- sum(2 ^ .subset(0:31, as.logical(rawToBits(hdr$length))))
+    hdr$length <- sum(2^.subset(0:31, as.logical(rawToBits(hdr$length))))
     hdr$version <- readBin(fileobj, what="raw", n=4, endian="little")
-    hdr$version <- sum(2 ^ .subset(0:31, as.logical(rawToBits(hdr$version))))
+    hdr$version <- sum(2^.subset(0:31, as.logical(rawToBits(hdr$version))))
     hdr$date <- readChar(fileobj, 8, useBytes=T)
     hdr$offset <- seek(fileobj, where=NA)
 
-    if (read_module_data){
+    if (read_module_data) {
       hdr$data <- readBin(fileobj, what="raw", n=hdr$length, endian="little")
-      if (length(hdr$data) != hdr$length)
-        stop(sprintf("Unexpected end of file while reading data\ncurrent module: %s\nlength read: %s\nlength expected: %s",
-                     hdr$longname,
-                     length(hdr$data),
-                     hdr$length),
-             call.=F)
+      if (length(hdr$data) != hdr$length) {
+        stop(sprintf(
+          "Unexpected end of file while reading data\ncurrent module: %s\nlength read: %s\nlength expected: %s",
+          hdr$longname,
+          length(hdr$data),
+          hdr$length
+        ),
+        call.=F
+        )
+      }
       mods <- append(mods, list(hdr))
     } else {
       mods <- append(mods, list(hdr))
@@ -435,15 +459,23 @@ VMP_colID_data_map <- list(
 
 # Combine the two maps
 VMP_colID_map <- do.call(rbind, append(
-  lapply(VMP_colID_flag_map, function(x) {x$size=0; x$flag=TRUE; x[c("name", "size", "type", "mask", "flag")]}),
-  lapply(VMP_colID_data_map, function(x) {x$mask=NA; x$flag=FALSE; x})
+  lapply(VMP_colID_flag_map, function(x) {
+    x$size <- 0
+    x$flag <- TRUE
+    x[c("name", "size", "type", "mask", "flag")]
+  }),
+  lapply(VMP_colID_data_map, function(x) {
+    x$mask <- NA
+    x$flag <- FALSE
+    x
+  })
 ))
 
-VMPdata_dtype_from_colIDs <- function(colIDs){
+VMPdata_dtype_from_colIDs <- function(colIDs) {
   colIDs <- as.character(colIDs)
 
-  missing <- ! colIDs %in% rownames(VMP_colID_map)
-  if(any(missing)) {
+  missing <- !colIDs %in% rownames(VMP_colID_map)
+  if (any(missing)) {
     missing <- colIDs[missing]
     s <- ifelse(length(missing) > 1, "s", "")
     missing <- paste0(missing, collapse=", ")
@@ -451,7 +483,7 @@ VMPdata_dtype_from_colIDs <- function(colIDs){
     stop(sprintf("mpr column type%s %s not implemented", s, missing), call.=F)
   }
 
-  col_types <- VMP_colID_map[colIDs,]
+  col_types <- VMP_colID_map[colIDs, ]
   # Columns --> list of vectors maintaining mode
   col_types <- lapply(split(col_types, col(col_types)), unlist, F, F)
   # Restore names
