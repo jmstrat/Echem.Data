@@ -116,28 +116,24 @@ load.addMissingColumns <- function(data) {
     } else if ("capacity.mah" %in% names(data)) {
       jms.classes::log.debug("dq_mah not present in raw data, calculating from capacity.mah")
       data$dq_mah <- c(0, diff(data$capacity.mah))
-    }
-  }
-
-  if (!"Capacity.Ah." %in% names(data)) {
-    if ("dq_mah" %in% names(data)) {
-      changes <- c(0, which(abs(diff(data$Ns_changes)) == 1), nrow(data))
-      capacity <- c()
-      for (i in 1:(length(changes) - 1)) {
-        capacity <- append(capacity, abs(cumsum(data$dq_mah[(changes[[i]] + 1):changes[[i + 1]]])))
-      }
-      data$Capacity.Ah. <- capacity / 1000
     } else {
-      jms.classes::log.debug("Capacity.Ah. not present in raw data, calculating from Current.A. and Test_Time.s.")
-      cap <- abs(data$Current.A.) * c(0, diff(data$Test_Time.s.)) * 1 / 3600
-      cap[data$Ns_changes] <- 0
-
-      # Continued...
+      jms.classes::log.debug("dq_mah not present in raw data, calculating from Current.A. and Test_Time.s.")
+      data$dq_mah <- data$Current.A. * c(0, diff(data$Test_Time.s.)) * 1 / 3.6
     }
-    jms.classes::log.debug("Capacity.Ah. not present in raw data, calculating from dq_mah and Ns_changes")
   }
 
+  needs_cap <- FALSE
+  if (!"Capacity.Ah." %in% names(data)) {
+    needs_cap <- TRUE
+    jms.classes::log.debug("Capacity.Ah. not present in raw data, calculating from dq_mah and Ns_changes")
+    cap <- abs(data$dq_mah) / 1000
+    cap[data$Ns_changes] <- 0
+    # Continued...
+  }
+
+  needs_step_time <- FALSE
   if (!"Step_Time.s." %in% names(data)) {
+    needs_step_time <- TRUE
     jms.classes::log.debug("Step_Time.s. not present in raw data, calculating it from Test_Time.s. and Ns_changes")
     Step_Time.s. <- data$Test_Time.s.
     # Continued...
@@ -145,26 +141,23 @@ load.addMissingColumns <- function(data) {
 
   # Continued --> split per step
   if (!all(c("Capacity.Ah.", "Step_Time.s.") %in% names(data))) {
-    pst <- 0
-    ncn <- c(1, which(data$Ns_changes), nrow(data) + 1)
-    for (i in 1:(length(ncn) - 1)) {
-      if (!"Capacity.Ah." %in% names(data)) {
-        cap[ncn[[i]]:(ncn[[i + 1]] - 1)] <- cumsum(cap[ncn[[i]]:(ncn[[i + 1]] - 1)])
+
+    step_changes <- c(1, which(data$Ns_changes), nrow(data) + 1)
+    for (i in 1:(length(step_changes) - 1)) {
+      step_points <- step_changes[[i]]:(step_changes[[i + 1]] - 1)
+
+      if (needs_cap) {
+        cap[step_points] <- cumsum(cap[step_points])
       }
-      if (!"Step_Time.s." %in% names(data)) {
-        pst <- Step_Time.s.[[ncn[[i]]]]
-        Step_Time.s.[ncn[[i]]:(ncn[[i + 1]] - 1)] <- Step_Time.s.[ncn[[i]]:(ncn[[i + 1]] - 1)] - pst
+      if (needs_step_time) {
+        t0 <- Step_Time.s.[[step_changes[[i]]]]
+        Step_Time.s.[step_points] <- Step_Time.s.[step_points] - t0
       }
     }
   }
+  if (needs_cap) data$Capacity.Ah. <- cap
+  if (needs_step_time) data$Step_Time.s. <- Step_Time.s.
 
-  if (!"Capacity.Ah." %in% names(data)) {
-    data$Capacity.Ah. <- cap
-  }
-
-  if (!"Step_Time.s." %in% names(data)) {
-    data$Step_Time.s. <- Step_Time.s.
-  }
 
   if (!"Discharge_Capacity.Ah." %in% names(data)) {
     jms.classes::log.debug('Discharge_Capacity.Ah. not present in raw data, calculating it from Capacity.Ah. and Current.A.')
