@@ -33,31 +33,42 @@ load.land.cex <- function(file) {
   ENDIANNESS <- "little"
 
   cex_file <- file(file, "rb")
-  #I don't know what this is
+  # I don't know what this is
   cex_magic <- as.raw(c(0x10, 0x11, 0x09, 0x88))
-  magic <- readBin(cex_file, what="raw",
-                   n=length(cex_magic), endian=ENDIANNESS)
-  if (!all(magic == cex_magic))
+  magic <- readBin(cex_file,
+    what="raw",
+    n=length(cex_magic), endian=ENDIANNESS
+  )
+  if (!all(magic == cex_magic)) {
     stop("Unknown magic found in .cex file", call.=F)
+  }
 
   data_version <- c()
   for (i in 1:4) {
-    data_version[[i]] <- readBin(cex_file, what="int",
-                                 n=1, size=1, endian=ENDIANNESS)
+    data_version[[i]] <- readBin(cex_file,
+      what="int",
+      n=1, size=1, endian=ENDIANNESS
+    )
   }
   data_version <- paste0(data_version, collapse=".")
   if (data_version != "0.1.1.0") stop("Unknown cex data version.")
 
-  machine_number <- readBin(cex_file, what="int", n=1,
-                            size=1, endian=ENDIANNESS) + 1
-  channel_number <- readBin(cex_file, what="int", n=1,
-                            size=1, endian=ENDIANNESS) + 1
+  machine_number <- readBin(cex_file,
+    what="int", n=1,
+    size=1, endian=ENDIANNESS
+  ) + 1
+  channel_number <- readBin(cex_file,
+    what="int", n=1,
+    size=1, endian=ENDIANNESS
+  ) + 1
 
   # This seems to change slightly -- I don't know what it is yet
   unknown <- readBin(cex_file, what="raw", n=6, endian=ENDIANNESS)
 
-  start_time <- as.POSIXct(readBin(cex_file, what="int", n=1, endian=ENDIANNESS),
-                           origin="1970-01-01")
+  start_time <- as.POSIXct(
+    readBin(cex_file, what="int", n=1, endian=ENDIANNESS),
+    origin="1970-01-01"
+  )
 
   unknown <- readBin(cex_file, what="raw", n=4, endian=ENDIANNESS)
 
@@ -79,12 +90,16 @@ load.land.cex <- function(file) {
   unknown <- readBin(cex_file, what="raw", n=8, endian=ENDIANNESS)
 
   # Seems to be the same as start_time
-  start_time2 <- as.POSIXct(readBin(cex_file, what="int", n=1, endian=ENDIANNESS),
-                            origin="1970-01-01")
+  start_time2 <- as.POSIXct(
+    readBin(cex_file, what="int", n=1, endian=ENDIANNESS),
+    origin="1970-01-01"
+  )
 
   # Sometimes the same as start time, sometimes end time??
-  some_other_time <- as.POSIXct(readBin(cex_file, what="int", n=1, endian=ENDIANNESS),
-                                origin="1970-01-01")
+  some_other_time <- as.POSIXct(
+    readBin(cex_file, what="int", n=1, endian=ENDIANNESS),
+    origin="1970-01-01"
+  )
 
   # This seems to change slightly -- I don't know what it is yet
   unknown <- readBin(cex_file, what="raw", n=104, endian=ENDIANNESS)
@@ -98,10 +113,12 @@ load.land.cex <- function(file) {
   unknown <- readBin(cex_file, what="raw", n=8, endian=ENDIANNESS)
 
   # The nulls are probably a character string or something that isn't set...
-  begin_program_magic <- as.raw(c(0xff, 0x7f, 0xff, 0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff,
-                                 0xff, 0xff, 0x7f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00))
+  begin_program_magic <- as.raw(c(
+    0xff, 0x7f, 0xff, 0x7f, 0xff, 0xff, 0xff, 0x7f, 0xff,
+    0xff, 0xff, 0x7f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  ))
 
   # PROGRAM:
 
@@ -127,8 +144,9 @@ load.land.cex <- function(file) {
   #              1    >=
 
   magic <- readBin(cex_file, what="raw", n=40, endian=ENDIANNESS)
-  if (!all(magic == begin_program_magic))
+  if (!all(magic == begin_program_magic)) {
     stop("Unknown program magic found in .cex file", call.=F)
+  }
 
   end_program_magic <- as.raw(c(0xbb, 0xbb, 0xff, 0xff))
 
@@ -168,8 +186,10 @@ load.land.cex <- function(file) {
     }
     step[["goto"]] <- goto
 
-    step[["step_number"]] <- readBin(cex_file, what="int", n=1, size=1,
-                                     signed=FALSE, endian=ENDIANNESS) + 1
+    step[["step_number"]] <- readBin(cex_file,
+      what="int", n=1, size=1,
+      signed=FALSE, endian=ENDIANNESS
+    ) + 1
 
     condition_type <- c()
     condition_sign <- c()
@@ -179,7 +199,7 @@ load.land.cex <- function(file) {
       condition_sign[[i]] <- readBin(cex_file, what="int", n=1, size=1, signed=FALSE, endian=ENDIANNESS)
     }
     for (i in 1:2) {
-    end_condition[[i]] <- readBin(cex_file, what="raw", n=2, endian=ENDIANNESS)
+      end_condition[[i]] <- readBin(cex_file, what="raw", n=2, endian=ENDIANNESS)
     }
 
     for (i in 1:2) {
@@ -189,12 +209,16 @@ load.land.cex <- function(file) {
         condition_sign[[i]] <- NA
       } else if (condition_type[[i]] == 1) {
         step[[paste0("condition_type_", i)]] <- "time"
-        step[[paste0("condition_", i)]] <- readBin(end_condition[[i]], what="int",
-                                                   size=2, signed=FALSE, endian=ENDIANNESS)
+        step[[paste0("condition_", i)]] <- readBin(end_condition[[i]],
+          what="int",
+          size=2, signed=FALSE, endian=ENDIANNESS
+        )
       } else if (condition_type[[i]] == 2) {
         step[[paste0("condition_type_", i)]] <- "voltage"
-        step[[paste0("condition_", i)]] <- convert_voltage(readBin(end_condition[[i]], what="int",
-                                                                  size=2, signed=TRUE, endian=ENDIANNESS))
+        step[[paste0("condition_", i)]] <- convert_voltage(readBin(end_condition[[i]],
+          what="int",
+          size=2, signed=TRUE, endian=ENDIANNESS
+        ))
       } else if (condition_type[[i]] == 6) {
         step[[paste0("condition_type_", i)]] <- "cycles"
         step[[paste0("condition_", i)]] <- readBin(end_condition[[i]], what="int", size=2, endian=ENDIANNESS)
@@ -213,13 +237,15 @@ load.land.cex <- function(file) {
 
     unknown <- readBin(cex_file, what="raw", n=8, endian=ENDIANNESS)
 
-    step[["log_time"]] <- readBin(cex_file, what="int", n=1,
-                                 size=2, signed = FALSE, endian=ENDIANNESS)
+    step[["log_time"]] <- readBin(cex_file,
+      what="int", n=1,
+      size=2, signed=FALSE, endian=ENDIANNESS
+    )
 
     # Includes log voltage and possibly log current / capacity or similar
     unknown <- readBin(cex_file, what="raw", n=6, endian=ENDIANNESS)
 
-    program[[length(program)+1]] <- step
+    program[[length(program) + 1]] <- step
   }
 
   # Possibly related to number of data points
@@ -276,8 +302,10 @@ load.land.cex <- function(file) {
   # Inspect the control rows (CCCCFFFF)
   control_rows <- which(data[, 1] == -13108)
 
-  types <- readBin(columnised_data[[2]][c(rbind( ( (control_rows - 1) * 2 + 1), ( (control_rows - 1) * 2 + 2) ) )],
-                   "integer", size=2, n=length(control_rows), endian=ENDIANNESS)
+  types <- readBin(columnised_data[[2]][c(rbind(((control_rows - 1) * 2 + 1), ((control_rows - 1) * 2 + 2)))],
+    "integer",
+    size=2, n=length(control_rows), endian=ENDIANNESS
+  )
   # IGNORE:
   # 51: 3300
   #   This is just an event that occured on the cycler, mostly irrelevant,
@@ -299,10 +327,12 @@ load.land.cex <- function(file) {
   for (i in which(!ignore)) {
     type <- types[[i]]
     if (type == 34) {
-      #2200
+      # 2200
       control <- control_rows[[i]]
-      mode <- readBin(columnised_data[[4]][ ( (control - 1) * 4 + 1) : ( (control - 1) * 4 + 2)],
-                      "integer", size=2, n=1, endian=ENDIANNESS)
+      mode <- readBin(columnised_data[[4]][ ((control - 1) * 4 + 1):((control - 1) * 4 + 2)],
+        "integer",
+        size=2, n=1, endian=ENDIANNESS
+      )
       # Ignore the rest of the data for this control for now
       # (Unknown & timestamp)
       data[control:n_data_points, "mode"] <- mode
@@ -353,9 +383,9 @@ load.land.xls <- function(file) {
     # Read sheets one by one
     for (i in 1:length(snums)) {
       s <- snums[[i]]
-      #Read
+      # Read
       ws <- .xldata(file, s)
-      #Add to data frame
+      # Add to data frame
       if (i == 1) {
         dat <- ws
       } else {
@@ -376,8 +406,10 @@ load.land.xls <- function(file) {
 
 load.land.txt <- function(file) {
   data <- read.table(file, sep="\t", header=TRUE)
-  names(data) <- c("Data_Point", "Test_Time.s.", "Step_Time.s.",
-                   "Voltage.V.", "Current.A.", "Capacity.Ah.",
-                   "Energy.Wh.", "Date_Time")
+  names(data) <- c(
+    "Data_Point", "Test_Time.s.", "Step_Time.s.",
+    "Voltage.V.", "Current.A.", "Capacity.Ah.",
+    "Energy.Wh.", "Date_Time"
+  )
   return(data)
 }
