@@ -7,9 +7,9 @@
 #' load.internal("/path/to/file.csv")
 #' @keywords internal
 load.internal <- function(path) {
-  #Open the file for reading
+  # Open the file for reading
   conn <- file(path, open="rt")
-  #Read until we find a line starting with #S
+  # Read until we find a line starting with #S
   header <- c()
   x <- TRUE
   while (x) {
