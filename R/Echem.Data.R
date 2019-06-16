@@ -5,7 +5,7 @@ NULL
 #' @importFrom utils capture.output
 #' @importFrom utils read.table
 
-.onLoad <- function(libname, pkgname){
+.onLoad <- function(libname, pkgname) {
   jms.classes::create_data_type("echem", expression("Time / s"), "Voltage / V", envir=asNamespace("Echem.Data"))
 }
 
