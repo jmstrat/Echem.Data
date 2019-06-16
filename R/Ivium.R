@@ -27,8 +27,8 @@ load.ivium.data.file <- function(file) {
   }
   pd <- pd[[1]]
 
-  #n_cols=lines[[pd+1]]
-  #We assume 3 columns here but it's actually as stated above...
+  # n_cols=lines[[pd+1]]
+  # We assume 3 columns here but it's actually as stated above...
   n_lines <- as.numeric(lines[[pd + 2]])
 
   data <- read.table(text=lines[(pd + 3):(pd + 3 + n_lines)])
