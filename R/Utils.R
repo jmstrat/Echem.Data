@@ -34,7 +34,7 @@ load.addMissingColumns <- function(data) {
       warning("Unable to determine current, assuming current control and using control data as the current", call.=FALSE)
       data$Current.A. <- data$control_v_ma / 1000
     } else {
-      jms.classes::log.warn("Current not present in raw data, unable to calculate from other available data.")
+      jms.classes::log.warn("Current not present in raw data, unable to calculate from other available data")
       warning("Unable to determine current", call.=F)
 
       # Skip all remaining column checks if we don't know the current
@@ -53,7 +53,7 @@ load.addMissingColumns <- function(data) {
   # ===================== #
 
   if (!"Step_Index" %in% names(data)) {
-    jms.classes::log.debug('Data was missing the "Step_Index" column, using 1 for rest steps, 2 for discharge steps and 3 for charge steps.')
+    jms.classes::log.debug('Step index not present in raw data,, using 1 for rest steps, 2 for discharge steps and 3 for charge steps')
     data$Step_Index <- 1
     data$Step_Index[discharge_steps] <- 2
     data$Step_Index[charge_steps] <- 3
@@ -65,7 +65,7 @@ load.addMissingColumns <- function(data) {
 
 
   if (!"Ns_changes" %in% names(data)) {
-    jms.classes::log.debug('Data was missing the "Ns_changes" column, adding it.')
+    jms.classes::log.debug('Ns_changes not present in raw data, calculating it from Step_Index')
     data$Ns_changes <- c(F, diff(data$Step_Index) != 0)
   }
 
@@ -74,10 +74,11 @@ load.addMissingColumns <- function(data) {
   # ===================== #
 
   if (!"Cycle_Index" %in% names(data)) {
-    jms.classes::log.debug('Data was missing the "Cycle_Index" column, adding it.')
     if ("counter_inc" %in% names(data)) {
+      jms.classes::log.debug('Cycle index not present in raw data, calculating it from counter_inc')
       cycle_changes <- which(abs(diff(data$counter_inc)) == 1) + 1
     } else {
+      jms.classes::log.debug('Cycle index not present in raw data, calculating it from Ns_changes and Current.A.')
       dis_points <- which(discharge_steps)
       ch_points <- which(charge_steps)
       if (!length(step2)) {
@@ -120,7 +121,6 @@ load.addMissingColumns <- function(data) {
 
   if (!"Capacity.Ah." %in% names(data)) {
     if ("dq_mah" %in% names(data)) {
-      jms.classes::log.debug("Capacity.Ah. not present in raw data, calculating from dq_mah and Ns_changes")
       changes <- c(0, which(abs(diff(data$Ns_changes)) == 1), nrow(data))
       capacity <- c()
       for (i in 1:(length(changes) - 1)) {
@@ -134,10 +134,11 @@ load.addMissingColumns <- function(data) {
 
       # Continued...
     }
+    jms.classes::log.debug("Capacity.Ah. not present in raw data, calculating from dq_mah and Ns_changes")
   }
 
   if (!"Step_Time.s." %in% names(data)) {
-    jms.classes::log.debug("Step_Time.s. not present in raw data, adding it")
+    jms.classes::log.debug("Step_Time.s. not present in raw data, calculating it from Test_Time.s. and Ns_changes")
     Step_Time.s. <- data$Test_Time.s.
     # Continued...
   }
@@ -166,10 +167,14 @@ load.addMissingColumns <- function(data) {
   }
 
   if (!"Discharge_Capacity.Ah." %in% names(data)) {
-    jms.classes::log.debug('Data was missing the "Discharge_Capacity.Ah." and / or "Charge_Capacity.Ah." columns, adding them.')
+    jms.classes::log.debug('Discharge_Capacity.Ah. not present in raw data, calculating it from Capacity.Ah. and Current.A.')
     data$Discharge_Capacity.Ah. <- 0
-    data$Charge_Capacity.Ah. <- 0
     data$Discharge_Capacity.Ah.[discharge_steps] <- data$Capacity.Ah.[discharge_steps]
+  }
+
+  if (!"Charge_Capacity.Ah." %in% names(data)) {
+    jms.classes::log.debug('Charge_Capacity.Ah. not present in raw data, calculating it from Capacity.Ah. and Current.A.')
+    data$Charge_Capacity.Ah. <- 0
     data$Charge_Capacity.Ah.[charge_steps] <- data$Capacity.Ah.[charge_steps]
   }
 
