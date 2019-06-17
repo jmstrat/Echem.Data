@@ -259,7 +259,7 @@ load.biologic.mpr <- function(mprfile) {
       column_types[[i]] <- sum(2^.subset(0:15, as.logical(rawToBits(modules[[data_module]]$data[(4 + i * 2):(5 + i * 2)]))))
     }
     ## There are 405 bytes of data before the main array starts
-    remaining_headers <- modules[[data_module]]$data[(5 + 2 * n_columns):405]
+    remaining_headers <- modules[[data_module]]$data[(6 + 2 * n_columns):405]
     main_data <- modules[[data_module]]$data[406:length(modules[[data_module]]$data)]
   } else {
     stop(sprintf("Unrecognised version for data module: %s", modules[[data_module]]["version"]), call.=F)
