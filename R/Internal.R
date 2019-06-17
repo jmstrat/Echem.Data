@@ -34,7 +34,7 @@ load.internal <- function(path) {
 #'
 #' This function finds the attributes for an dataset
 #'
-#' @param header_lines The header of an exported csv file
+#' @param header_text The header of an exported csv file
 #' @return A list of attributes that were found
 #' @keywords internal
 .get_internal_attributes <- function(header_text) {
@@ -47,7 +47,7 @@ load.internal <- function(path) {
     attName <- line[[1]]
     attValue <- line[[2]]
     if (attName == "date") attValue <- as.Date(attValue)
-    if (attName == "mass") attValue <- as.numeric(attValue)
+    if (attName == "Characteristic Mass") attValue <- as.numeric(attValue)
     atts[[attName]] <- attValue
   }
   atts

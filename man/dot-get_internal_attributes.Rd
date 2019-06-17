@@ -7,7 +7,7 @@
 .get_internal_attributes(header_text)
 }
 \arguments{
-\item{header_lines}{The header of an exported csv file}
+\item{header_text}{The header of an exported csv file}
 }
 \value{
 A list of attributes that were found

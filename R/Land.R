@@ -350,11 +350,11 @@ load.land.cex <- function(file) {
 
   # Add the discovered attributes to the data
   attr(data, "machine_number") <- machine_number
-  attr(data, "channel_number") <- channel_number
+  attr(data, "channel") <- channel_number
   attr(data, "date") <- start_time
   attr(data, "voltage_range") <- voltage_range
   attr(data, "current_range") <- current_range
-  attr(data, "active_material_mass") <- active_material_mass
+  attr(data, "Characteristic Mass") <- active_material_mass
   attr(data, "monitor_version") <- monitor_version
   attr(data, "program_name") <- program_name
   attr(data, "comment") <- comment

@@ -103,7 +103,7 @@ load.arbin <- function(file) {
     atts$channel <- info[index[1, "row"] + 1, index[1, "col"]]
 
     index <- which(info == "Schedule_File_Name", arr.ind=TRUE)
-    atts$schedule <- info[index[1, "row"] + 1, index[1, "col"]]
+    atts$program_name <- info[index[1, "row"] + 1, index[1, "col"]]
   }, silent=TRUE)
   atts
 }

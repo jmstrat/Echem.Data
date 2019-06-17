@@ -114,7 +114,7 @@ load.maccor <- function(file) {
 
     attr(data, "date") <- as.Date(header[[1]][[4]], format="%d %B %Y, %I:%M:%S %p")
     attr(data, "channel") <- header[[2]][[4]]
-    attr(data, "schedule") <- header[[3]][[2]]
+    attr(data, "program_name") <- header[[3]][[2]]
   }, silent=TRUE)
 
   # Return
