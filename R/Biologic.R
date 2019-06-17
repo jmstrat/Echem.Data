@@ -215,14 +215,14 @@ load.biologic.mpr <- function(mprfile) {
   settings_mod <- data_module <- maybe_log_module <- NULL
   for (m in 1:length(modules)) {
     if (modules[[m]]["shortname"] == "Set   ") {
-      settings_mod <- m
-    } # IGNORED
+      settings_mod <- m # IGNORED
+    }
     if (modules[[m]]["shortname"] == "data  ") {
       data_module <- m
     }
     if (modules[[m]]["shortname"] == "LOG   ") {
-      maybe_log_module <- m
-    } # IGNORED
+      maybe_log_module <- m # IGNORED
+    }
     # We also have External Device module (for e.g. temperature probes) -- data format currently unknown
   }
 

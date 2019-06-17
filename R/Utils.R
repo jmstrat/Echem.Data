@@ -53,7 +53,7 @@ load.addMissingColumns <- function(data) {
   # ===================== #
 
   if (!"Step_Index" %in% names(data)) {
-    jms.classes::log.debug('Step index not present in raw data,, using 1 for rest steps, 2 for discharge steps and 3 for charge steps')
+    jms.classes::log.debug('Step index not present in raw data, using 1 for rest steps, 2 for discharge steps and 3 for charge steps')
     data$Step_Index <- 1
     data$Step_Index[discharge_steps] <- 2
     data$Step_Index[charge_steps] <- 3
@@ -98,7 +98,7 @@ load.addMissingColumns <- function(data) {
         cycle_changes <- data$Ns_changes & discharge_steps
       }
       cycle_changes <- which(cycle_changes)
-      # TODO: calculate and store biologic counter_inc ??
+      # TODO: calculate and store counter_inc (as in biologic data)??
     }
 
     cycle_changes <- c(1, cycle_changes, nrow(data) + 1)
