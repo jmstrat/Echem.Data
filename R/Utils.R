@@ -81,11 +81,11 @@ load.addMissingColumns <- function(data) {
       jms.classes::log.debug('Cycle index not present in raw data, calculating it from Ns_changes and Current.A.')
       dis_points <- which(discharge_steps)
       ch_points <- which(charge_steps)
-      if (!length(step2)) {
+      if (!length(dis_points)) {
         # No Discharge data
         dis_points <- Inf
       }
-      if (!length(step3)) {
+      if (!length(ch_points)) {
         # No Charge data
         ch_points <- Inf
       }
