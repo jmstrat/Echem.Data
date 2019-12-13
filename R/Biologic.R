@@ -38,6 +38,7 @@ load.biologic <- function(file) {
       time.s="Test_Time.s.",
       control.V.mA="control_v_ma",
       Ewe.V="Voltage.V.",
+      X.Ecv..V="Control.Voltage.V.",
       X.Q.Qo..mA.h="q-q0_mah",
       Analog.IN.1.V="analog_in_1_v",
       P.W="p_w",
@@ -448,6 +449,7 @@ VMP_colID_data_map <- list(
   # 174 defined above
   `434`=list(name="(Q-Qo).C", size=4, type="numeric"),
   `435`=list(name="dQ.C", size=4, type="numeric"),
+  `441`=list(name="<Ecv>/V", size=4, type="numeric"),
   `467`=list(name="Q.charge.discharge.mA.h", size=8, type="numeric"),
   `468`=list(name="half.cycle", size=4, type="integer"),
   `473`=list(name="THD Ewe.pct", size=4, type="numeric"),
