@@ -171,17 +171,20 @@ load.biologic.mpt <- function(file) {
 .get_biologic_attributes <- function(header_text) {
   # TODO: there are more details that we could parse here
   atts <- list()
-  try({
-    date_line <- suppressWarnings(grep("Acquisition started on", header_text))
-    if (length(date_line)) {
-      atts$date <- as.Date(substr(header_text[[date_line]], 26, 44), format="%m/%d/%Y %T")
-    }
+  try(
+    {
+      date_line <- suppressWarnings(grep("Acquisition started on", header_text))
+      if (length(date_line)) {
+        atts$date <- as.Date(substr(header_text[[date_line]], 26, 44), format="%m/%d/%Y %T")
+      }
 
-    channel_line <- suppressWarnings(grep("Run on channel", header_text))
-    if (length(channel_line)) {
-      atts$channel <- substr(header_text[[channel_line]], 18, 30)
-    }
-  }, silent=TRUE)
+      channel_line <- suppressWarnings(grep("Run on channel", header_text))
+      if (length(channel_line)) {
+        atts$channel <- substr(header_text[[channel_line]], 18, 30)
+      }
+    },
+    silent=TRUE
+  )
   atts
 }
 
@@ -261,7 +264,7 @@ load.biologic.mpr <- function(mprfile) {
     }
     ## There are 405 bytes of data before the main array starts
     remaining_headers <- modules[[data_module]]$data[(6 + 2 * n_columns):405]
-    main_data_start = ifelse(modules[[data_module]]["version"] == 2, 406, 407)
+    main_data_start <- ifelse(modules[[data_module]]["version"] == 2, 406, 407)
     main_data <- modules[[data_module]]$data[main_data_start:length(modules[[data_module]]$data)]
   } else {
     stop(sprintf("Unrecognised version for data module: %s", modules[[data_module]]["version"]), call.=F)
