@@ -252,7 +252,7 @@ load.biologic.mpr <- function(mprfile) {
     column_types <- as.integer(modules[[data_module]]$data[6:(5 + n_columns)])
     remaining_headers <- modules[[data_module]]$data[(5 + n_columns):100]
     main_data <- modules[[data_module]]$data[101:length(modules[[data_module]]$data)]
-  } else if (modules[[data_module]]["version"] == 2) {
+  } else if (modules[[data_module]]["version"] %in% c(2, 3)) {
     # 2 byte unsigned integer (little endian)
     column_types <- rep_len(NA, n_columns)
     for (i in 1:n_columns) {
@@ -260,7 +260,8 @@ load.biologic.mpr <- function(mprfile) {
     }
     ## There are 405 bytes of data before the main array starts
     remaining_headers <- modules[[data_module]]$data[(6 + 2 * n_columns):405]
-    main_data <- modules[[data_module]]$data[406:length(modules[[data_module]]$data)]
+    main_data_start = ifelse(modules[[data_module]]["version"] == 2, 406, 407)
+    main_data <- modules[[data_module]]$data[main_data_start:length(modules[[data_module]]$data)]
   } else {
     stop(sprintf("Unrecognised version for data module: %s", modules[[data_module]]["version"]), call.=F)
   }
