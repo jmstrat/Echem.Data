@@ -6,7 +6,7 @@ Author: Josh Stratford
 Maintainer: Josh Stratford <51674722+jmstrat@users.noreply.github.com>
 Description: Reads electrochemistry data files into a standard format.
 URL: https://github.com/jmstrat/Echem.Data
-BugReports: https://github.com/Echem.Data/issues
+BugReports: https://github.com/jmstrat/Echem.Data/issues
 Imports: jms.classes (>= 1.0.0),
          readxl (>= 1.3.1)
 License: GNU Affero General Public License v3.0 
