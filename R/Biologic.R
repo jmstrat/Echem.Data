@@ -69,7 +69,6 @@ load.biologic <- function(file) {
     )
     if (is.na(newname)) {
       jms.classes::log.warn("Unmapped column type: %s", n)
-      warning("Unmapped column type: ", n)
     } else {
       names(data)[[i]] <- newname
     }
