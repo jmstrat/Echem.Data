@@ -38,6 +38,7 @@ load.biologic <- function(file) {
       time.s="Test_Time.s.",
       control.V.mA="control_v_ma",
       Ewe.V="Voltage.V.",
+      X.Ecv..V="Control.Voltage.V.",
       X.Q.Qo..mA.h="q-q0_mah",
       Analog.IN.1.V="analog_in_1_v",
       P.W="p_w",
@@ -170,17 +171,20 @@ load.biologic.mpt <- function(file) {
 .get_biologic_attributes <- function(header_text) {
   # TODO: there are more details that we could parse here
   atts <- list()
-  try({
-    date_line <- suppressWarnings(grep("Acquisition started on", header_text))
-    if (length(date_line)) {
-      atts$date <- as.Date(substr(header_text[[date_line]], 26, 44), format="%m/%d/%Y %T")
-    }
+  try(
+    {
+      date_line <- suppressWarnings(grep("Acquisition started on", header_text))
+      if (length(date_line)) {
+        atts$date <- as.Date(substr(header_text[[date_line]], 26, 44), format="%m/%d/%Y %T")
+      }
 
-    channel_line <- suppressWarnings(grep("Run on channel", header_text))
-    if (length(channel_line)) {
-      atts$channel <- substr(header_text[[channel_line]], 18, 30)
-    }
-  }, silent=TRUE)
+      channel_line <- suppressWarnings(grep("Run on channel", header_text))
+      if (length(channel_line)) {
+        atts$channel <- substr(header_text[[channel_line]], 18, 30)
+      }
+    },
+    silent=TRUE
+  )
   atts
 }
 
@@ -252,7 +256,7 @@ load.biologic.mpr <- function(mprfile) {
     column_types <- as.integer(modules[[data_module]]$data[6:(5 + n_columns)])
     remaining_headers <- modules[[data_module]]$data[(5 + n_columns):100]
     main_data <- modules[[data_module]]$data[101:length(modules[[data_module]]$data)]
-  } else if (modules[[data_module]]["version"] == 2) {
+  } else if (modules[[data_module]]["version"] %in% c(2, 3)) {
     # 2 byte unsigned integer (little endian)
     column_types <- rep_len(NA, n_columns)
     for (i in 1:n_columns) {
@@ -260,7 +264,8 @@ load.biologic.mpr <- function(mprfile) {
     }
     ## There are 405 bytes of data before the main array starts
     remaining_headers <- modules[[data_module]]$data[(6 + 2 * n_columns):405]
-    main_data <- modules[[data_module]]$data[406:length(modules[[data_module]]$data)]
+    main_data_start <- ifelse(modules[[data_module]]["version"] == 2, 406, 407)
+    main_data <- modules[[data_module]]$data[main_data_start:length(modules[[data_module]]$data)]
   } else {
     stop(sprintf("Unrecognised version for data module: %s", modules[[data_module]]["version"]), call.=F)
   }
@@ -447,6 +452,7 @@ VMP_colID_data_map <- list(
   # 174 defined above
   `434`=list(name="(Q-Qo).C", size=4, type="numeric"),
   `435`=list(name="dQ.C", size=4, type="numeric"),
+  `441`=list(name="<Ecv>/V", size=4, type="numeric"),
   `467`=list(name="Q.charge.discharge.mA.h", size=8, type="numeric"),
   `468`=list(name="half.cycle", size=4, type="integer"),
   `473`=list(name="THD Ewe.pct", size=4, type="numeric"),
