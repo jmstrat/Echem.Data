@@ -264,6 +264,7 @@ load.biologic.mpr <- function(mprfile) {
     ## There are 405 bytes of data before the main array starts
     remaining_headers <- modules[[data_module]]$data[(6 + 2 * n_columns):405]
     main_data_start <- ifelse(modules[[data_module]]["version"] == 2, 406, 407)
+    # in v3 there is a 01 between the headers and data
     main_data <- modules[[data_module]]$data[main_data_start:length(modules[[data_module]]$data)]
   } else {
     stop(sprintf("Unrecognised version for data module: %s", modules[[data_module]]["version"]), call.=F)
