@@ -17,24 +17,31 @@ load.ivium <- function(file) {
   }
 }
 
-load.ivium.data.file <- function(file) {
-  jms.classes::log.info('Reading ivium .idf data from "%s"', file)
-  lines <- readLines(file, skipNul=TRUE)
-  pd <- grep("primary_data", perl=T, lines)
+load.ivium.data.file <- function(filePath) {
+  jms.classes::log.info('Reading ivium .idf data from "%s"', filePath)
+
+  # R 4.3.0:
+  # Regular expression functions now check more thoroughly whether their inputs
+  # are valid strings (in their encoding, e.g. in UTF-8).
+  conn <- file(filePath, encoding="ISO-8859-1") # Latin-1
+  lines <- readLines(conn, skipNul=TRUE)
+  close(conn)
+
+  pd <- grep("primary_data", perl=F, fixed=T, lines)
+
 
   if (!length(pd)) {
     stop("No data found in idf file!", call.=FALSE)
   }
   pd <- pd[[1]]
 
-  # n_cols=lines[[pd+1]]
   # We assume 3 columns here but it's actually as stated above...
   n_lines <- as.numeric(lines[[pd + 2]])
 
-  data <- read.table(text=lines[(pd + 3):(pd + 3 + n_lines)])
+  data <- read.table(text=lines[(pd + 3):(pd + 3 + n_lines - 1)])
   names(data) <- c("Test_Time.s.", "Current.A.", "Voltage.V.")
 
-  st <- grep("starttime=", perl=T, lines)
+  st <- grep("starttime=", perl=F, fixed=T, lines)
   if (length(st)) {
     st <- st[[1]]
     attr(data, "date") <- as.Date(lines[[st]], format="starttime=%d/%m/%Y %T")
