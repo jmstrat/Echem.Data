@@ -272,7 +272,7 @@ load.biologic.mpr <- function(mprfile) {
 
   # Have seen at least one instance where
   if (!all(remaining_headers == 0)) {
-    jms.classes::log.debug("Unknown headers: %s", remaining_headers)
+    jms.classes::log.warn("Unknown headers: %s", remaining_headers[remaining_headers != 0])
     warning("Unknown headers were found in the mpr file, ignoring")
   }
 
