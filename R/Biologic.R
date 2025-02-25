@@ -251,10 +251,19 @@ load.biologic.mpr <- function(mprfile) {
   jms.classes::log.debug("Data module version = %s", modules[[data_module]]["version"])
 
   if (modules[[data_module]]["version"] == 0) {
-    # 1 byte unsigned integer
-    column_types <- as.integer(modules[[data_module]]$data[6:(5 + n_columns)])
-    remaining_headers <- modules[[data_module]]$data[(5 + n_columns):100]
-    main_data <- modules[[data_module]]$data[101:length(modules[[data_module]]$data)]
+    if (as.integer(modules[[data_module]]$data[[6]]) == 0) {
+      # Ec-Lab >= 11.50
+      column_types <- readBin(modules[[data_module]]$data[6:(5 + n_columns * 2)], "integer", n=n_columns, size=2, endian="big")
+      remaining_headers <- modules[[data_module]]$data[(6 + n_columns * 2):1006]
+      main_data <- modules[[data_module]]$data[1008:length(modules[[data_module]]$data)]
+    } else {
+      # Ec-Lab < 11.50
+
+      # 1 byte unsigned integer
+      column_types <- as.integer(modules[[data_module]]$data[6:(5 + n_columns)])
+      remaining_headers <- modules[[data_module]]$data[(5 + n_columns):100]
+      main_data <- modules[[data_module]]$data[101:length(modules[[data_module]]$data)]
+    }
   } else if (modules[[data_module]]["version"] %in% c(2, 3)) {
     # 2 byte unsigned integer (little endian)
     column_types <- rep_len(NA, n_columns)
@@ -365,11 +374,27 @@ read_VMP_modules <- function(fileobj, read_module_data=TRUE) {
     hdr <- list()
     hdr$shortname <- readChar(fileobj, 6, useBytes=T)
     hdr$longname <- readChar(fileobj, 25, useBytes=T)
-    hdr$length <- readBin(fileobj, what="raw", n=4, endian="little")
+
+    maybe_length = readBin(fileobj, what="raw", n=4, endian="little")
+    if (identical(maybe_length, as.raw(c(255, 255, 255, 255)))) {
+      # EC-Lab version >= 11.50
+      hdr$max_length <- maybe_length
+      hdr$max_length <- sum(2^.subset(0:31, as.logical(rawToBits(hdr$max_length))))
+
+      hdr$length <- readBin(fileobj, what="raw", n=4, endian="little")
+      hdr$version <- readBin(fileobj, what="raw", n=4, endian="little")
+      hdr$unknown <- readBin(fileobj, what="raw", n=4, endian="little")
+      hdr$date <- readChar(fileobj, 8, useBytes=T)
+    } else {
+      # EC-Lab version < 11.50
+      hdr$length <- maybe_length
+      hdr$version <- readBin(fileobj, what="raw", n=4, endian="little")
+      hdr$date <- readChar(fileobj, 8, useBytes=T)
+    }
+
     hdr$length <- sum(2^.subset(0:31, as.logical(rawToBits(hdr$length))))
-    hdr$version <- readBin(fileobj, what="raw", n=4, endian="little")
     hdr$version <- sum(2^.subset(0:31, as.logical(rawToBits(hdr$version))))
-    hdr$date <- readChar(fileobj, 8, useBytes=T)
+
     hdr$offset <- seek(fileobj, where=NA)
 
     if (read_module_data) {
