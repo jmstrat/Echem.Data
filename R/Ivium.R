@@ -44,7 +44,13 @@ load.ivium.data.file <- function(filePath) {
   st <- grep("starttime=", perl=F, fixed=T, lines)
   if (length(st)) {
     st <- st[[1]]
-    attr(data, "date") <- as.Date(lines[[st]], format="starttime=%d/%m/%Y %T")
+    attr(data, "date") <- as.POSIXct(lines[[st]], format="starttime=%d/%m/%Y %T")
+  }
+
+  et <- grep("endtime=", perl=F, fixed=T, lines)
+  if (length(et)) {
+    et <- et[[1]]
+    attr(data, "enddate") <- as.POSIXct(lines[[et]], format="endtime=%d/%m/%Y %T")
   }
   data
 }
