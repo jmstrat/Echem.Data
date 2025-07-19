@@ -51,6 +51,12 @@ load.ivium.data.file <- function(filePath) {
   if (length(et)) {
     et <- et[[1]]
     attr(data, "enddate") <- as.POSIXct(lines[[et]], format="endtime=%d/%m/%Y %T")
+
+    hasDate <- attr(data, "date")
+    hasDate <- length(hasDate) > 0 && !is.na(hasDate)
+    if (!hasDate) {
+      attr(data, "date") <- attr(data, "enddate") - data$Test_Time.s.[nrow(data)]
+    }
   }
   data
 }
