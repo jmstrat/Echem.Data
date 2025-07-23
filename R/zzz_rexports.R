@@ -39,6 +39,26 @@ NULL
 #' @keywords internal
 NULL
 
+#' @importFrom jms.classes xlab<-
+#' @name xlab<-
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes ylab<-
+#' @name ylab<-
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes y2lab<-
+#' @name y2lab<-
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
 
 #' @importFrom jms.classes xcol
 #' @name xcol
@@ -49,6 +69,76 @@ NULL
 
 #' @importFrom jms.classes ycol
 #' @name ycol
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes y2col
+#' @name y2col
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes xcol<-
+#' @name xcol<-
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes ycol<-
+#' @name ycol<-
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes y2col<-
+#' @name y2col<-
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes xscale
+#' @name xscale
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes yscale
+#' @name yscale
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes y2scale
+#' @name y2scale
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes xscale<-
+#' @name xscale<-
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes yscale<-
+#' @name yscale<-
+#' @export
+#' @rdname jms.reexports
+#' @keywords internal
+NULL
+
+#' @importFrom jms.classes y2scale<-
+#' @name y2scale<-
 #' @export
 #' @rdname jms.reexports
 #' @keywords internal
